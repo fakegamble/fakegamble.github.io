@@ -17,11 +17,16 @@
                     <span class="material-icons">casino</span>
                     <h1>GameHub</h1>
                 </div>
-                <div class="balance-display">
-                    <span class="balance-label">Balance</span>
-                    <span class="balance-amount">$0.00</span>
-                    <button class="add-funds" onclick="window.addmoney(100)">
-                        <span class="material-icons">add_circle</span>
+                <div class="header-right">
+                    <div class="balance-display">
+                        <span class="balance-label">Balance</span>
+                        <span class="balance-amount">$0.00</span>
+                        <button class="add-funds" onclick="window.addmoney(1000)">
+                            <span class="material-icons">add_circle</span>
+                        </button>
+                    </div>
+                    <button class="settings-btn">
+                        <span class="material-icons">settings</span>
                     </button>
                 </div>
             </div>
@@ -49,7 +54,7 @@
             <div class="games-container">
                 <a href="/games/mines.html" class="game-card">
                     <div class="game-preview">
-                        <span class="material-icons game-icon">grid_4x4</span>
+                        <img src="assets/mines.png" alt="Mines Game" class="game-banner">
                     </div>
                     <div class="game-info">
                         <h3>Mines</h3>
@@ -67,7 +72,7 @@
                 </a>
                 <a href="/games/blackjack.html" class="game-card">
                     <div class="game-preview">
-                        <span class="material-icons game-icon">style</span>
+                        <img src="assets/blackjack.png" alt="Blackjack Game" class="game-banner">
                     </div>
                     <div class="game-info">
                         <h3>Blackjack</h3>
@@ -86,6 +91,43 @@
                 <!-- Add more game cards here -->
             </div>
         </main>
+    </div>
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-content">
+            <div class="settings-header">
+                <h2>Settings</h2>
+                <button class="close-settings">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <div class="settings-body">
+                <div class="settings-section">
+                    <h3>Theme Colors</h3>
+                    <div class="color-settings">
+                        <div class="color-option">
+                            <label>Primary Color</label>
+                            <input type="color" id="primaryColor" value="#4f46e5">
+                        </div>
+                        <div class="color-option">
+                            <label>Accent Color</label>
+                            <input type="color" id="accentColor" value="#7c3aed">
+                        </div>
+                        <div class="color-option">
+                            <label>Background Color</label>
+                            <input type="color" id="backgroundColor" value="#0f172a">
+                        </div>
+                    </div>
+                    <button class="reset-colors">Reset to Default</button>
+                </div>
+                <div class="settings-section">
+                    <h3>Credits</h3>
+                    <div class="credits-info">
+                        <p>Developed by <a href="https://zkql.github.io/" target="_blank">Xavier</a></p>
+                        <p>Version 1.0.0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <script src="home-script.js"></script>
 </body>
