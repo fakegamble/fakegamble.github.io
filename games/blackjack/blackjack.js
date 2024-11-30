@@ -6,11 +6,12 @@ class BlackjackGame {
         this.gameActive = false;
         this.betAmount = 1.00;
         this.balance = parseFloat(localStorage.getItem('gameBalance')) || 100;
-        this.gameHistory = [];
+        this.gameHistory = JSON.parse(localStorage.getItem('gameHistory')) || [];
         
         this.initializeDOM();
         this.initializeEventListeners();
         this.updateBalanceDisplay();
+        this.updateHistory();
     }
 
     initializeDOM() {
@@ -332,6 +333,9 @@ class BlackjackGame {
         if (this.gameHistory.length > 10) {
             this.gameHistory.pop();
         }
+        
+        // Save history to localStorage
+        localStorage.setItem('gameHistory', JSON.stringify(this.gameHistory));
         
         this.updateHistory();
     }
