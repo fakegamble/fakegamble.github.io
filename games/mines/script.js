@@ -11,7 +11,7 @@ class MinesGame {
         this.currentProfit = 0;
         this.autoPlaySettings = null;
         this.autoPlayActive = false;
-        this.gameHistory = this.loadHistory() || [];
+        this.gameHistory = JSON.parse(localStorage.getItem('minesGameHistory')) || [];
         this.updateHistory();
 
         // Multiplier mapping based on mine count
@@ -365,12 +365,12 @@ class MinesGame {
             profit: this.gameActive ? this.currentProfit : -this.betAmount
         };
         
-        this.gameHistory.unshift(gameResult); // Add to start of array
-        if (this.gameHistory.length > 10) { // Keep only last 10 games
+        this.gameHistory.unshift(gameResult);
+        if (this.gameHistory.length > 10) {
             this.gameHistory.pop();
         }
         
-        this.saveHistory();
+        localStorage.setItem('minesGameHistory', JSON.stringify(this.gameHistory));
         this.updateHistory();
     }
 
@@ -395,15 +395,6 @@ class MinesGame {
             historyItem.appendChild(profitSpan);
             historyContainer.appendChild(historyItem);
         });
-    }
-
-    loadHistory() {
-        const savedHistory = localStorage.getItem('minesGameHistory');
-        return savedHistory ? JSON.parse(savedHistory) : null;
-    }
-
-    saveHistory() {
-        localStorage.setItem('minesGameHistory', JSON.stringify(this.gameHistory));
     }
 
     // Optional: Add this method to reset history if needed
