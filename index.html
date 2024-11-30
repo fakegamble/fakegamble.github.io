@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Casino</title>
+    <link rel="stylesheet" href="home-styles.css">
+    <!-- Add Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="page-wrapper">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="material-icons">casino</span>
+                    <h1>GameHub</h1>
+                </div>
+                <div class="balance-display">
+                    <span class="balance-label">Balance</span>
+                    <span class="balance-amount">$0.00</span>
+                    <button class="add-funds" onclick="window.addmoney(100)">
+                        <span class="material-icons">add_circle</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Game Categories -->
+            <div class="categories-wrapper">
+                <div class="category active">
+                    <span class="material-icons">stars</span>
+                    <span>Popular</span>
+                </div>
+                <div class="category">
+                    <span class="material-icons">bolt</span>
+                    <span>Originals</span>
+                </div>
+                <div class="category">
+                    <span class="material-icons">casino</span>
+                    <span>Table Games</span>
+                </div>
+            </div>
+
+            <!-- Games Grid -->
+            <div class="games-container">
+                <a href="mines.html" class="game-card">
+                    <div class="game-preview">
+                        <span class="material-icons game-icon">grid_4x4</span>
+                    </div>
+                    <div class="game-info">
+                        <h3>Mines</h3>
+                        <div class="game-stats">
+                            <span class="stat">
+                                <span class="material-icons">trending_up</span>
+                                96% RTP
+                            </span>
+                            <span class="stat">
+                                <span class="material-icons">bolt</span>
+                                Original
+                            </span>
+                        </div>
+                    </div>
+                </a>
+                <!-- Add more game cards here -->
+            </div>
+        </main>
+    </div>
+    <script src="home-script.js"></script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mines Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-wrapper">
+        <div class="sidebar">
+            <div class="sidebar-top">
+                <div class="mode-switch">
+                    <button class="mode-btn active" data-mode="manual">Manual</button>
+                    <button class="mode-btn" data-mode="auto">Auto</button>
+                </div>
+                
+                <div class="bet-panel">
+                    <div class="amount-control">
+                        <label>Amount</label>
+                        <div class="amount-input">
+                            <input type="number" id="betAmount" value="0.00" step="0.01">
+                            <div class="amount-modifiers">
+                                <button class="modifier-btn half-btn">½</button>
+                                <button class="modifier-btn double-btn">2×</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mines-control">
+                        <label>Mines</label>
+                        <select id="minesCount">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                            <option value="13">13</option>
+                            <option value="14">14</option>
+                            <option value="15">15</option>
+                            <option value="16">16</option>
+                            <option value="17">17</option>
+                            <option value="18">18</option>
+                            <option value="19">19</option>
+                            <option value="20">20</option>
+                            <option value="21">21</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button id="actionButton" class="action-btn">Play</button>
+
+                <div class="previous-games">
+                    <h4 class="section-title">Previous Games</h4>
+                    <div class="game-history"></div>
+                </div>
+
+                <div class="balance-display">
+                    <span class="balance-label">Balance</span>
+                    <span class="balance-amount">$100.00</span>
+                </div>
+
+                <div class="game-info">
+                    <div class="tiles-info">
+                        <span class="revealed-count">0</span>
+                        <span class="separator">/</span>
+                        <span class="total-tiles">25</span>
+                        <span class="tiles-label">Tiles</span>
+                    </div>
+                    <div class="profit-info">
+                        <span class="profit-label">Profit</span>
+                        <span class="profit-amount">$0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="game-grid"></div>
+        </div>
+
+        <!-- Auto Play Panel -->
+        <div class="auto-panel" id="autoPanel">
+            <div class="auto-content">
+                <h3>Auto Settings</h3>
+                <div class="auto-controls">
+                    <div class="auto-input">
+                        <label>Amount</label>
+                        <input type="number" id="autoAmount" value="1.00" step="0.01">
+                    </div>
+                    <div class="auto-input">
+                        <label>Mines</label>
+                        <input type="number" id="autoMines" value="3" min="1" max="24">
+                    </div>
+                    <div class="auto-input">
+                        <label>Games</label>
+                        <input type="number" id="autoGames" value="10" min="1">
+                    </div>
+                    <div class="auto-input">
+                        <label>Stop on Profit</label>
+                        <input type="number" id="autoProfit" value="10.00" step="0.01">
+                    </div>
+                    <div class="auto-input">
+                        <label>Stop on Loss</label>
+                        <input type="number" id="autoLoss" value="10.00" step="0.01">
+                    </div>
+                </div>
+                <div class="auto-buttons">
+                    <button id="startAutoPlay" class="start-auto-btn">Start</button>
+                    <button id="closeAutoPlay" class="close-auto-btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Result Overlay -->
+        <div class="result-overlay" id="resultOverlay">
+            <div class="result-content">
+                <div class="result-icon"></div>
+                <div class="result-text-wrapper">
+                    <span class="result-text"></span>
+                    <span class="result-amount"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="auto-overlay"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
