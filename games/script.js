@@ -7,7 +7,7 @@ class MinesGame {
         this.gameActive = false;
         this.betAmount = 0;
         this.mineCount = 3;
-        this.balance = this.loadBalance() || 100;
+        this.balance = parseFloat(localStorage.getItem('gameBalance')) || 100;
         this.currentProfit = 0;
         this.autoPlaySettings = null;
         this.autoPlayActive = false;
@@ -291,15 +291,11 @@ class MinesGame {
     }
 
     loadBalance() {
-        return parseFloat(localStorage.getItem('minesGameBalance'));
+        return parseFloat(localStorage.getItem('gameBalance'));
     }
 
     saveBalance() {
-        localStorage.setItem('minesGameBalance', this.balance.toString());
-        if (this.balance < 10) {
-            this.balance = 100;
-            this.saveBalance();
-        }
+        localStorage.setItem('gameBalance', this.balance.toFixed(2));
     }
 
     async startAutoPlay() {

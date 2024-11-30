@@ -13,7 +13,7 @@ class GameHub {
     updateBalanceDisplay() {
         const balanceElement = document.querySelector('.balance-amount');
         balanceElement.textContent = `$${this.balance.toFixed(2)}`;
-        localStorage.setItem('gameBalance', this.balance);
+        localStorage.setItem('gameBalance', this.balance.toFixed(2));
     }
 
     initializeCategories() {
