@@ -6,7 +6,7 @@ class BlackjackGame {
         this.gameActive = false;
         this.betAmount = 1.00;
         this.balance = parseFloat(localStorage.getItem('gameBalance')) || 100;
-        this.gameHistory = JSON.parse(localStorage.getItem('gameHistory')) || [];
+        this.gameHistory = JSON.parse(localStorage.getItem('blackjackHistory')) || [];
         
         this.initializeDOM();
         this.initializeEventListeners();
@@ -324,18 +324,31 @@ class BlackjackGame {
     }
 
     addToHistory(result) {
+        let amount;
+        if (result === 'win') {
+            amount = this.betAmount; // Amount won (profit)
+        } else if (result === 'blackjack') {
+            amount = this.betAmount * 1.5; // Blackjack pays 3:2
+        } else if (result === 'push') {
+            amount = 0; // No profit/loss
+        } else {
+            amount = -this.betAmount; // Loss
+        }
+        
         const gameResult = {
             result: result,
-            amount: result === 'win' ? this.betAmount : (result === 'push' ? 0 : -this.betAmount)
+            betAmount: this.betAmount,
+            profit: amount,
+            timestamp: Date.now() // Add timestamp for better tracking
         };
         
         this.gameHistory.unshift(gameResult);
-        if (this.gameHistory.length > 10) {
+        if (this.gameHistory.length > 5) {
             this.gameHistory.pop();
         }
         
-        // Save history to localStorage
-        localStorage.setItem('gameHistory', JSON.stringify(this.gameHistory));
+        // Save to localStorage with specific key
+        localStorage.setItem('blackjackHistory', JSON.stringify(this.gameHistory));
         
         this.updateHistory();
     }
@@ -353,8 +366,20 @@ class BlackjackGame {
             resultSpan.textContent = game.result.charAt(0).toUpperCase() + game.result.slice(1);
             
             const amountSpan = document.createElement('span');
-            amountSpan.className = `history-profit ${game.amount >= 0 ? 'positive' : 'negative'}`;
-            amountSpan.textContent = `$${Math.abs(game.amount).toFixed(2)}`;
+            // Calculate total amount based on result
+            let totalAmount;
+            if (game.result === 'win') {
+                totalAmount = game.betAmount * 2; // Original bet + win
+            } else if (game.result === 'blackjack') {
+                totalAmount = game.betAmount * 2.5; // Original bet + blackjack payout
+            } else if (game.result === 'push') {
+                totalAmount = game.betAmount; // Original bet returned
+            } else { // lose
+                totalAmount = 0; // Total loss
+            }
+            
+            amountSpan.className = `history-profit ${totalAmount > 0 ? 'positive' : 'negative'}`;
+            amountSpan.textContent = `$${totalAmount.toFixed(2)}`;
             
             historyItem.appendChild(resultSpan);
             historyItem.appendChild(amountSpan);

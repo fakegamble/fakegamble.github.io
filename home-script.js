@@ -12,6 +12,9 @@ class GameHub {
         if (this.getTimeLeftOnCooldown() > 0) {
             this.startCooldownTimer();
         }
+        
+        // Initialize player counter
+        this.initializePlayerCounter();
     }
 
     initializeUI() {
@@ -242,6 +245,50 @@ class GameHub {
         document.documentElement.style.setProperty('--primary-color', colors.primaryColor);
         document.documentElement.style.setProperty('--accent-color', colors.accentColor);
         document.documentElement.style.setProperty('--background-color', colors.backgroundColor);
+    }
+
+    initializePlayerCounter() {
+        // Create a unique counter ID for your site
+        const COUNTER_ID = 'fake-gamble-site';
+        const API_KEY = 'your_api_ninjas_key'; // You'll need to sign up at api-ninjas.com
+        
+        const updatePlayerCount = async () => {
+            try {
+                const response = await fetch(
+                    `https://api.api-ninjas.com/v1/counter?id=${COUNTER_ID}&hit=true`,
+                    {
+                        headers: {
+                            'X-Api-Key': API_KEY
+                        }
+                    }
+                );
+                
+                const data = await response.json();
+                const playerCountElement = document.querySelector('.player-count-number');
+                
+                // Add animation when updating the count
+                playerCountElement.classList.remove('balance-update');
+                void playerCountElement.offsetWidth; // Trigger reflow
+                playerCountElement.classList.add('balance-update');
+                
+                // Update the count
+                playerCountElement.textContent = data.value;
+                
+            } catch (error) {
+                console.error('Error updating player count:', error);
+            }
+        };
+
+        // Update immediately and then every 30 seconds
+        updatePlayerCount();
+        setInterval(updatePlayerCount, 30000);
+
+        // Update count when visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                updatePlayerCount();
+            }
+        });
     }
 }
 
