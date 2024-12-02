@@ -25,7 +25,7 @@ class ViewerStats {
 
         // Update display
         this.currentViewersElement.textContent = Object.keys(viewers).length;
-        this.totalViewsElement.textContent = totalViews;
+        this.totalViewsElement.textContent = totalViews.toLocaleString();
     }
 
     cleanupExpiredViewers() {
@@ -46,6 +46,7 @@ class ViewerStats {
     }
 }
 
+// Initialize stats
 document.addEventListener('DOMContentLoaded', () => {
     new ViewerStats();
 }); 
