@@ -1,10 +1,9 @@
 class ViewCounter {
-    constructor(displayMode = false) {
+    constructor() {
         this.sessionId = this.generateSessionId();
         this.lastPing = Date.now();
         this.PING_INTERVAL = 30000; // 30 seconds
         this.INACTIVE_THRESHOLD = 60000; // 1 minute
-        this.displayMode = displayMode;
         
         this.initializeCounter();
         this.startPinging();
@@ -15,18 +14,19 @@ class ViewCounter {
     }
 
     initializeCounter() {
+        // Initialize or get existing sessions from localStorage
         const sessions = JSON.parse(localStorage.getItem('activeSessions')) || {};
         sessions[this.sessionId] = Date.now();
         localStorage.setItem('activeSessions', JSON.stringify(sessions));
 
-        if (this.displayMode) {
-            window.addEventListener('storage', (e) => {
-                if (e.key === 'activeSessions') {
-                    this.updateViewCount();
-                }
-            });
-            this.updateViewCount();
-        }
+        // Add event listener for storage changes
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'activeSessions') {
+                this.updateViewCount();
+            }
+        });
+
+        this.updateViewCount();
     }
 
     startPinging() {
@@ -35,12 +35,14 @@ class ViewCounter {
             this.updateSession();
         }, this.PING_INTERVAL);
 
+        // Update on visibility change
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
                 this.updateSession();
             }
         });
 
+        // Update before page unload
         window.addEventListener('beforeunload', () => {
             this.removeSession();
         });
@@ -58,10 +60,7 @@ class ViewCounter {
         });
 
         localStorage.setItem('activeSessions', JSON.stringify(sessions));
-        
-        if (this.displayMode) {
-            this.updateViewCount();
-        }
+        this.updateViewCount();
     }
 
     removeSession() {
@@ -71,8 +70,6 @@ class ViewCounter {
     }
 
     updateViewCount() {
-        if (!this.displayMode) return;
-        
         const sessions = JSON.parse(localStorage.getItem('activeSessions')) || {};
         const activeCount = Object.keys(sessions).length;
         
@@ -81,4 +78,4 @@ class ViewCounter {
             element.textContent = activeCount;
         });
     }
-}
+} 
