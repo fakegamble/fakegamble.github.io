@@ -2,7 +2,7 @@
     class ViewerTracker {
         constructor() {
             this.viewerId = this.getOrCreateViewerId();
-            this.updateInterval = 10000; // 10 seconds
+            this.updateInterval = 1000; // 1 second heartbeat
             this.startTracking();
         }
 
@@ -29,7 +29,7 @@
             // Update immediately
             this.updateViewerActivity();
 
-            // Set up periodic updates
+            // Set up 1-second heartbeat
             setInterval(() => this.updateViewerActivity(), this.updateInterval);
 
             // Update when tab becomes visible
@@ -43,4 +43,4 @@
 
     // Initialize tracker
     new ViewerTracker();
-})(); 
+})();

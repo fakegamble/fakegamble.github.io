@@ -1,6 +1,7 @@
 class ViewerStats {
     constructor() {
-        this.updateInterval = 2000; // Update every 2 seconds
+        this.updateInterval = 1000; // Check every 1 second
+        this.inactivityThreshold = 3000; // Consider viewer inactive after 3 seconds
         this.initializeStats();
         this.startUpdating();
     }
@@ -24,8 +25,13 @@ class ViewerStats {
         const totalViews = parseInt(localStorage.getItem('siteTotalViews') || '0');
 
         // Update display
-        this.currentViewersElement.textContent = Object.keys(viewers).length;
-        this.totalViewsElement.textContent = totalViews.toLocaleString();
+        const currentViewers = Object.keys(viewers).length;
+        if (this.currentViewersElement.textContent !== currentViewers.toString()) {
+            this.currentViewersElement.textContent = currentViewers;
+        }
+        if (this.totalViewsElement.textContent !== totalViews.toLocaleString()) {
+            this.totalViewsElement.textContent = totalViews.toLocaleString();
+        }
     }
 
     cleanupExpiredViewers() {
@@ -34,7 +40,7 @@ class ViewerStats {
         let changed = false;
 
         for (const [id, timestamp] of Object.entries(viewers)) {
-            if (now - timestamp > 30000) { // Remove after 30 seconds of inactivity
+            if (now - timestamp > this.inactivityThreshold) {
                 delete viewers[id];
                 changed = true;
             }
