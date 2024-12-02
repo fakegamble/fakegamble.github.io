@@ -1,29 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Stats</title>
-    <link rel="stylesheet" href="styles/stats.css">
-</head>
-<body>
-    <div class="stats-container">
-        <div class="stats-card">
-            <h2>Live Viewers</h2>
-            <div class="viewer-stats">
-                <div class="stat-value">
-                    <span class="viewer-count">0</span>
-                    <span class="stat-label">Current Viewers</span>
-                </div>
-                <div class="pulse-indicator"></div>
-            </div>
-        </div>
-    </div>
-    <script src="scripts/view-counter.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            new ViewCounter();
-        });
-    </script>
-</body>
-</html> 
+<script src="/scripts/view-counter.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        new ViewCounter(true); // true means display count
+    });
+</script> 

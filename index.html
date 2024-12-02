@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Fake Gamble | HOME </title>
     <link rel="stylesheet" href="home-styles.css">
+    <!-- Add Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
     <div class="page-wrapper">
+        <!-- Header -->
         <header class="main-header">
             <div class="header-content">
                 <div class="logo-section">
@@ -32,7 +34,9 @@
             </div>
         </header>
 
+        <!-- Main Content -->
         <main class="main-content">
+            <!-- Game Categories -->
             <div class="categories-wrapper">
                 <div class="category active">
                     <span class="material-icons">stars</span>
@@ -48,6 +52,7 @@
                 </div>
             </div>
 
+            <!-- Games Grid -->
             <div class="games-container">
                 <a href="/games/mines/" class="game-card">
                     <div class="game-preview">
@@ -67,7 +72,7 @@
                         </div>
                     </div>
                 </a>
-                <a href="/games/blackjack/" class="game-card">
+                <a href="/games/blackjack.html" class="game-card">
                     <div class="game-preview">
                         <img src="assets/blackjack.png" alt="Blackjack Game" class="game-banner">
                     </div>
@@ -88,7 +93,6 @@
             </div>
         </main>
     </div>
-
     <div class="settings-modal" id="settingsModal">
         <div class="settings-content">
             <div class="settings-header">
@@ -127,5 +131,11 @@
         </div>
     </div>
     <script src="home-script.js"></script>
+    <script src="scripts/view-counter.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            new ViewCounter(false);
+        });
+    </script>
 </body>
 </html>
