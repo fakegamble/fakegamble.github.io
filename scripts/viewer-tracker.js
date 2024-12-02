@@ -1,56 +1,36 @@
-class ViewerTracker {
-    constructor() {
-        this.ws = null;
-        this.reconnectAttempts = 0;
-        this.maxReconnectAttempts = 5;
-        this.initializeWebSocket();
-        this.setupPageEvents();
+(() => {
+    function generateViewerId() {
+        return 'viewer_' + Math.random().toString(36).substr(2, 9);
     }
 
-    initializeWebSocket() {
-        this.ws = new WebSocket('ws://' + window.location.host + '/ws');
-        
-        this.ws.onopen = () => {
-            this.reconnectAttempts = 0;
-            this.sendViewerStatus('connect');
-        };
-
-        this.ws.onclose = () => {
-            if (this.reconnectAttempts < this.maxReconnectAttempts) {
-                this.reconnectAttempts++;
-                setTimeout(() => this.initializeWebSocket(), 5000);
-            }
-        };
-    }
-
-    setupPageEvents() {
-        // Send disconnect when page is closed/navigated away from
-        window.addEventListener('beforeunload', () => {
-            this.sendViewerStatus('disconnect');
-        });
-
-        // Handle page visibility changes
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                this.sendViewerStatus('inactive');
-            } else {
-                this.sendViewerStatus('active');
-            }
-        });
-    }
-
-    sendViewerStatus(status) {
-        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-            this.ws.send(JSON.stringify({
-                type: 'viewerStatus',
-                status: status,
-                page: window.location.pathname
-            }));
+    function updateViewerActivity() {
+        // Get or create viewer ID
+        let viewerId = sessionStorage.getItem('viewerId');
+        if (!viewerId) {
+            viewerId = generateViewerId();
+            sessionStorage.setItem('viewerId', viewerId);
+            
+            // Increment total views only on first visit
+            const totalViews = parseInt(localStorage.getItem('siteTotalViews') || '0');
+            localStorage.setItem('siteTotalViews', totalViews + 1);
         }
-    }
-}
 
-// Initialize tracker when page loads
-document.addEventListener('DOMContentLoaded', () => {
-    new ViewerTracker();
-}); 
+        // Update viewers list
+        const viewers = JSON.parse(localStorage.getItem('siteViewers') || '{}');
+        viewers[viewerId] = Date.now();
+        localStorage.setItem('siteViewers', JSON.stringify(viewers));
+    }
+
+    // Update on page load
+    updateViewerActivity();
+
+    // Update periodically
+    setInterval(updateViewerActivity, 10000); // Every 10 seconds
+
+    // Update when tab becomes visible
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            updateViewerActivity();
+        }
+    });
+})(); 
