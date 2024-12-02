@@ -6,12 +6,10 @@ class BlackjackGame {
         this.gameActive = false;
         this.betAmount = 1.00;
         this.balance = parseFloat(localStorage.getItem('gameBalance')) || 100;
-        this.gameHistory = JSON.parse(localStorage.getItem('blackjackHistory')) || [];
         
         this.initializeDOM();
         this.initializeEventListeners();
         this.updateBalanceDisplay();
-        this.updateHistory();
     }
 
     initializeDOM() {
@@ -20,7 +18,6 @@ class BlackjackGame {
         this.standButton = document.getElementById('standButton');
         this.doubleButton = document.getElementById('doubleButton');
         this.betInput = document.getElementById('betAmount');
-        this.resultOverlay = document.getElementById('resultOverlay');
         this.playerCards = document.querySelector('.player-hand .cards');
         this.dealerCards = document.querySelector('.dealer-hand .cards');
         this.playerValue = document.querySelector('.player-hand .hand-value');
@@ -48,7 +45,6 @@ class BlackjackGame {
             }
         }
         
-        // Shuffle deck
         for (let i = this.deck.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]];
@@ -81,7 +77,6 @@ class BlackjackGame {
             }
         }
         
-        // Adjust for aces
         while (value > 21 && aces > 0) {
             value -= 10;
             aces -= 1;
@@ -95,8 +90,6 @@ class BlackjackGame {
         this.standButton.disabled = !enabled;
         this.doubleButton.disabled = !enabled || this.betAmount * 2 > this.balance;
         this.betInput.disabled = enabled;
-        
-        // Only enable action button (Deal) when game is not active
         this.actionButton.disabled = enabled;
     }
 
@@ -116,7 +109,6 @@ class BlackjackGame {
         this.playerCards.innerHTML = '';
         this.dealerCards.innerHTML = '';
         
-        // Deal initial cards
         const playerCard1 = this.drawCard();
         const dealerCard1 = this.drawCard();
         const playerCard2 = this.drawCard();
@@ -134,10 +126,9 @@ class BlackjackGame {
         this.updateControls(true);
     }
 
-    async endGame(result) {
+    endGame(result) {
         this.gameActive = false;
         
-        // Reveal dealer's hidden card
         const dealerCards = this.dealerCards.querySelectorAll('.card');
         if (dealerCards[1]) {
             dealerCards[1].classList.remove('hidden');
@@ -148,9 +139,8 @@ class BlackjackGame {
         }
 
         this.updateHandValues();
-        this.updateControls(false); // Disable game controls, enable Deal button
+        this.updateControls(false);
 
-        // Handle winnings
         let winAmount = 0;
         if (result === 'win') {
             winAmount = this.betAmount * 2;
@@ -166,21 +156,24 @@ class BlackjackGame {
             this.updateBalanceDisplay();
         }
 
-        // Add to history
-        this.addToHistory(result);
-
-        // Show result overlay
-        const resultOverlay = document.getElementById('resultOverlay');
-        const resultText = resultOverlay.querySelector('.result-text');
-        const resultAmount = resultOverlay.querySelector('.result-amount');
+        const resultText = result.charAt(0).toUpperCase() + result.slice(1);
+        const profitAmount = winAmount - this.betAmount;
         
-        resultText.textContent = result.charAt(0).toUpperCase() + result.slice(1);
-        resultAmount.textContent = `${result === 'lose' ? '-' : '+'}$${Math.abs(winAmount - this.betAmount).toFixed(2)}`;
-        resultOverlay.style.display = 'flex';
-
-        // Hide result overlay after 2 seconds
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        resultOverlay.style.display = 'none';
+        const overlay = document.createElement('div');
+        overlay.className = 'result-overlay active';
+        overlay.innerHTML = `
+            <div class="result-content">
+                <div class="result-text-wrapper">
+                    <span class="result-text">${resultText}</span>
+                    <span class="result-amount ${profitAmount >= 0 ? 'win' : 'lose'}">
+                        ${profitAmount >= 0 ? '+' : '-'}$${Math.abs(profitAmount).toFixed(2)}
+                    </span>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        setTimeout(() => overlay.remove(), 2000);
     }
 
     hit() {
@@ -193,7 +186,6 @@ class BlackjackGame {
         const playerValue = this.calculateHand(this.playerHand);
         this.updateHandValues();
 
-        // Disable double after hit
         this.doubleButton.disabled = true;
 
         if (playerValue > 21) {
@@ -204,7 +196,6 @@ class BlackjackGame {
     stand() {
         if (!this.gameActive) return;
         
-        // Disable all game buttons during dealer's turn
         this.hitButton.disabled = true;
         this.standButton.disabled = true;
         this.doubleButton.disabled = true;
@@ -235,7 +226,6 @@ class BlackjackGame {
     async playDealerHand() {
         if (!this.gameActive) return;
 
-        // Reveal dealer's hidden card first
         const dealerCards = this.dealerCards.querySelectorAll('.card');
         if (dealerCards[1]) {
             dealerCards[1].classList.remove('hidden');
@@ -245,9 +235,7 @@ class BlackjackGame {
             }
         }
 
-        // Dealer must hit on 16 and below, stand on 17 and above
         while (this.calculateHand(this.dealerHand) < 17) {
-            // Add delay for animation
             await new Promise(resolve => setTimeout(resolve, 500));
 
             const { card, element } = this.drawCard();
@@ -256,7 +244,6 @@ class BlackjackGame {
             this.updateHandValues();
         }
 
-        // Determine winner
         const playerValue = this.calculateHand(this.playerHand);
         const dealerValue = this.calculateHand(this.dealerHand);
 
@@ -271,7 +258,6 @@ class BlackjackGame {
             result = 'push';
         }
 
-        // Check for blackjack (21 with exactly 2 cards)
         if (playerValue === 21 && this.playerHand.length === 2) {
             result = 'blackjack';
         }
@@ -279,26 +265,12 @@ class BlackjackGame {
         this.endGame(result);
     }
 
-    showResult(text, amount, isError = false) {
-        this.resultOverlay.querySelector('.result-text').textContent = text;
-        this.resultOverlay.querySelector('.result-amount').textContent = amount;
-        this.resultOverlay.className = 'result-overlay active' + (isError ? ' error' : '');
-        
-        setTimeout(() => {
-            this.resultOverlay.className = 'result-overlay';
-        }, 2000);
-    }
-
     updateHandValues() {
         const playerValue = this.calculateHand(this.playerHand);
-        
-        // Calculate dealer's visible cards only during the game
         let dealerValue;
         if (this.gameActive && this.dealerHand.length > 0) {
-            // Only count the visible card (first card) during active game
             dealerValue = this.calculateHand([this.dealerHand[0]]);
         } else {
-            // Show full hand value when game is not active
             dealerValue = this.calculateHand(this.dealerHand);
         }
         
@@ -307,7 +279,10 @@ class BlackjackGame {
     }
 
     updateBalanceDisplay() {
-        document.querySelector('.balance-amount').textContent = `$${this.balance.toFixed(2)}`;
+        const balanceElements = document.querySelectorAll('.balance-amount');
+        balanceElements.forEach(element => {
+            element.textContent = `$${this.balance.toFixed(2)}`;
+        });
     }
 
     adjustBet(multiplier) {
@@ -322,73 +297,8 @@ class BlackjackGame {
     saveBalance() {
         localStorage.setItem('gameBalance', this.balance.toFixed(2));
     }
-
-    addToHistory(result) {
-        let amount;
-        if (result === 'win') {
-            amount = this.betAmount; // Amount won (profit)
-        } else if (result === 'blackjack') {
-            amount = this.betAmount * 1.5; // Blackjack pays 3:2
-        } else if (result === 'push') {
-            amount = 0; // No profit/loss
-        } else {
-            amount = -this.betAmount; // Loss
-        }
-        
-        const gameResult = {
-            result: result,
-            betAmount: this.betAmount,
-            profit: amount,
-            timestamp: Date.now() // Add timestamp for better tracking
-        };
-        
-        this.gameHistory.unshift(gameResult);
-        if (this.gameHistory.length > 5) {
-            this.gameHistory.pop();
-        }
-        
-        // Save to localStorage with specific key
-        localStorage.setItem('blackjackHistory', JSON.stringify(this.gameHistory));
-        
-        this.updateHistory();
-    }
-
-    updateHistory() {
-        const historyContainer = document.querySelector('.game-history');
-        historyContainer.innerHTML = '';
-        
-        this.gameHistory.forEach(game => {
-            const historyItem = document.createElement('div');
-            historyItem.className = 'history-item';
-            
-            const resultSpan = document.createElement('span');
-            resultSpan.className = 'history-result';
-            resultSpan.textContent = game.result.charAt(0).toUpperCase() + game.result.slice(1);
-            
-            const amountSpan = document.createElement('span');
-            // Calculate total amount based on result
-            let totalAmount;
-            if (game.result === 'win') {
-                totalAmount = game.betAmount * 2; // Original bet + win
-            } else if (game.result === 'blackjack') {
-                totalAmount = game.betAmount * 2.5; // Original bet + blackjack payout
-            } else if (game.result === 'push') {
-                totalAmount = game.betAmount; // Original bet returned
-            } else { // lose
-                totalAmount = 0; // Total loss
-            }
-            
-            amountSpan.className = `history-profit ${totalAmount > 0 ? 'positive' : 'negative'}`;
-            amountSpan.textContent = `$${totalAmount.toFixed(2)}`;
-            
-            historyItem.appendChild(resultSpan);
-            historyItem.appendChild(amountSpan);
-            historyContainer.appendChild(historyItem);
-        });
-    }
 }
 
-// Initialize game when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     new BlackjackGame();
-}); 
+});

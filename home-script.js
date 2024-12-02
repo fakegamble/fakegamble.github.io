@@ -2,13 +2,12 @@ class GameHub {
     constructor() {
         this.balance = parseFloat(localStorage.getItem('gameBalance')) || 100.00;
         this.lastAddMoney = parseInt(localStorage.getItem('lastAddMoney')) || 0;
-        this.COOLDOWN_TIME = 5 * 60 * 1000; // 5 minutes in milliseconds
+        this.COOLDOWN_TIME = 5 * 60 * 1000;
         this.initializeUI();
         this.addEventListeners();
         this.initializeWelcomeMessage();
         this.initializeSettings();
         
-        // Start timer if there's an active cooldown
         if (this.getTimeLeftOnCooldown() > 0) {
             this.startCooldownTimer();
         }
@@ -18,16 +17,11 @@ class GameHub {
         this.updateBalanceDisplay();
         this.initializeCategories();
         this.updateAddMoneyButton();
-        
-        // Add some visual flair with confetti on load
         this.showWelcomeEffect();
-        
-        // Disable zoom on scroll/pinch
         this.disableZoom();
     }
 
     showWelcomeEffect() {
-        // Simple confetti effect (you'll need to add confetti.js to your project)
         if (typeof confetti !== 'undefined') {
             confetti({
                 particleCount: 100,
@@ -54,7 +48,6 @@ class GameHub {
         balanceElement.textContent = `$${this.balance.toFixed(2)}`;
         localStorage.setItem('gameBalance', this.balance.toFixed(2));
         
-        // Add animation effect when balance changes
         balanceElement.classList.add('balance-update');
         setTimeout(() => balanceElement.classList.remove('balance-update'), 500);
     }
@@ -87,11 +80,9 @@ class GameHub {
                 categories.forEach(c => c.classList.remove('active'));
                 category.classList.add('active');
                 
-                // Add subtle animation when switching categories
                 const gamesContainer = document.querySelector('.games-container');
                 gamesContainer.style.opacity = '0';
                 setTimeout(() => {
-                    // Add filtering logic here when you have more games
                     gamesContainer.style.opacity = '1';
                 }, 300);
             });
@@ -99,7 +90,6 @@ class GameHub {
     }
 
     addEventListeners() {
-        // Add global money function with cooldown
         window.addmoney = (amount) => {
             const timeLeft = this.getTimeLeftOnCooldown();
             
@@ -117,18 +107,15 @@ class GameHub {
             this.updateAddMoneyButton();
             this.showNotification(`Successfully added $${amount.toFixed(2)}!`, 'success');
             
-            // Start cooldown timer update
             this.startCooldownTimer();
         };
     }
 
     startCooldownTimer() {
-        // Clear any existing timer
         if (this.cooldownTimer) {
             clearInterval(this.cooldownTimer);
         }
 
-        // Update immediately and then start interval
         this.updateAddMoneyButton();
         
         this.cooldownTimer = setInterval(() => {
@@ -139,7 +126,7 @@ class GameHub {
                 clearInterval(this.cooldownTimer);
                 this.showNotification('You can add money again!', 'info');
             }
-        }, 1000); // Update every second
+        }, 1000);
     }
 
     showNotification(message, type = 'info') {
@@ -148,10 +135,8 @@ class GameHub {
         notification.textContent = message;
         document.body.appendChild(notification);
 
-        // Animate in
         setTimeout(() => notification.classList.add('show'), 100);
 
-        // Remove after 3 seconds
         setTimeout(() => {
             notification.classList.remove('show');
             setTimeout(() => notification.remove(), 300);
@@ -165,7 +150,6 @@ class GameHub {
         const colorInputs = document.querySelectorAll('.color-option input');
         const resetColors = document.querySelector('.reset-colors');
 
-        // Load saved colors
         this.loadSavedColors();
 
         settingsBtn.addEventListener('click', () => {
@@ -176,21 +160,18 @@ class GameHub {
             settingsModal.classList.remove('show');
         });
 
-        // Close modal when clicking outside
         settingsModal.addEventListener('click', (e) => {
             if (e.target === settingsModal) {
                 settingsModal.classList.remove('show');
             }
         });
 
-        // Handle color changes
         colorInputs.forEach(input => {
             input.addEventListener('change', () => {
                 this.updateColors();
             });
         });
 
-        // Reset colors
         resetColors.addEventListener('click', () => {
             this.resetColors();
         });
@@ -205,12 +186,10 @@ class GameHub {
 
         const savedColors = JSON.parse(localStorage.getItem('themeColors')) || defaultColors;
 
-        // Set input values
         document.getElementById('primaryColor').value = savedColors.primaryColor;
         document.getElementById('accentColor').value = savedColors.accentColor;
         document.getElementById('backgroundColor').value = savedColors.backgroundColor;
 
-        // Apply colors
         this.applyColors(savedColors);
     }
 
@@ -232,7 +211,6 @@ class GameHub {
             backgroundColor: '#0f172a'
         };
 
-        // Reset input values
         document.getElementById('primaryColor').value = defaultColors.primaryColor;
         document.getElementById('accentColor').value = defaultColors.accentColor;
         document.getElementById('backgroundColor').value = defaultColors.backgroundColor;
@@ -248,21 +226,18 @@ class GameHub {
     }
 
     disableZoom() {
-        // Disable ctrl + scroll zoom
         document.addEventListener('wheel', function(e) {
             if (e.ctrlKey) {
                 e.preventDefault();
             }
         }, { passive: false });
 
-        // Disable ctrl + +/- zoom
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && (e.key === '+' || e.key === '-' || e.key === '=')) {
                 e.preventDefault();
             }
         });
 
-        // Disable double-tap zoom on touch devices
         let lastTouchEnd = 0;
         document.addEventListener('touchend', function(e) {
             const now = Date.now();
@@ -274,7 +249,6 @@ class GameHub {
     }
 }
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     window.gameHub = new GameHub();
-}); 
+});
