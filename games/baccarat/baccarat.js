@@ -1,18 +1,43 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getDatabase, ref, get, set, update } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBWSvCUgql8OcoubCi0GeAvVnCW_3bEsWw",
+    authDomain: "views-d0b3b.firebaseapp.com",
+    projectId: "views-d0b3b",
+    storageBucket: "views-d0b3b.firebasestorage.app",
+    messagingSenderId: "27855410097",
+    appId: "1:27855410097:web:02e7a49a01be10ddc32390",
+    measurementId: "G-5DPDZYDRFJ"
+};
+
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+
 class BaccaratGame {
     constructor() {
-        this.loadBalance();
         this.betAmount = 1.00;
         this.gameActive = false;
         this.selectedBet = null;
         this.deck = [];
         
-        this.gamesPlayed = parseInt(localStorage.getItem('baccarat_gamesPlayed')) || 0;
-        this.gamesWon = parseInt(localStorage.getItem('baccarat_gamesWon')) || 0;
+        this.gamesPlayed = 0;
+        this.gamesWon = 0;
         
         this.initializeDOM();
         this.initializeEventListeners();
-        this.updateBalanceDisplay();
-        this.updateStats();
+        this.initializeGame();
+    }
+
+    async initializeGame() {
+        const userData = await this.loadUserData();
+        if (userData) {
+            this.balance = userData.balance;
+            this.gamesPlayed = userData.gamesPlayed || 0;
+            this.gamesWon = userData.gamesWon || 0;
+            this.updateBalanceDisplay();
+            this.updateStats();
+        }
     }
 
     initializeDOM() {
@@ -55,7 +80,6 @@ class BaccaratGame {
             }
         }
         
-        // Shuffle deck
         for (let i = this.deck.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]];
@@ -93,9 +117,7 @@ class BaccaratGame {
         }
 
         this.gameActive = true;
-        this.balance -= this.betAmount;
-        this.saveBalance();
-        this.updateBalanceDisplay();
+        await this.updateBalance(-this.betAmount);
         this.actionButton.disabled = true;
 
         this.createDeck();
@@ -105,7 +127,6 @@ class BaccaratGame {
         const playerHand = [];
         const bankerHand = [];
 
-        // Initial deal
         for (let i = 0; i < 2; i++) {
             const playerCard = this.drawCard();
             const bankerCard = this.drawCard();
@@ -125,13 +146,11 @@ class BaccaratGame {
         this.playerValue.textContent = playerValue;
         this.bankerValue.textContent = bankerValue;
 
-        // Check for natural win
         if (playerValue >= 8 || bankerValue >= 8) {
-            this.determineWinner(playerValue, bankerValue);
+            await this.determineWinner(playerValue, bankerValue);
             return;
         }
 
-        // Player third card rule
         if (playerValue <= 5) {
             const playerCard = this.drawCard();
             playerHand.push(playerCard.card);
@@ -142,7 +161,6 @@ class BaccaratGame {
             this.playerValue.textContent = playerValue;
         }
 
-        // Banker third card rule
         if (bankerValue <= 5) {
             const bankerCard = this.drawCard();
             bankerHand.push(bankerCard.card);
@@ -153,10 +171,10 @@ class BaccaratGame {
             this.bankerValue.textContent = bankerValue;
         }
 
-        this.determineWinner(playerValue, bankerValue);
+        await this.determineWinner(playerValue, bankerValue);
     }
 
-    determineWinner(playerValue, bankerValue) {
+    async determineWinner(playerValue, bankerValue) {
         let result;
         let winAmount = 0;
 
@@ -174,7 +192,7 @@ class BaccaratGame {
             } else {
                 winAmount = this.betAmount * 1.95;
             }
-            this.balance += winAmount;
+            await this.updateBalance(winAmount);
             this.gamesWon++;
             this.showResult('Win!', `+$${(winAmount - this.betAmount).toFixed(2)}`);
         } else {
@@ -183,9 +201,6 @@ class BaccaratGame {
 
         this.gamesPlayed++;
         this.updateStats();
-        this.saveBalance();
-        this.updateBalanceDisplay();
-        
         this.gameActive = false;
         this.actionButton.disabled = false;
     }
@@ -211,12 +226,12 @@ class BaccaratGame {
         setTimeout(() => overlay.classList.remove('active'), 2000);
     }
 
-    updateStats() {
+    async updateStats() {
         const winRate = this.gamesPlayed > 0 ? (this.gamesWon / this.gamesPlayed * 100).toFixed(1) : '0.0';
         document.querySelector('.win-rate-value').textContent = `${winRate}%`;
         document.querySelector('.total-played-value').textContent = this.gamesPlayed;
         
-        this.saveBalance();
+        await this.saveUserData();
     }
 
     updateBalanceDisplay() {
@@ -232,15 +247,25 @@ class BaccaratGame {
         this.betAmount = parseFloat(this.betInput.value) || 0;
     }
 
-    saveBalance() {
+    async updateBalance(amount) {
+        this.balance += amount;
+        this.updateBalanceDisplay();
+        await this.saveUserData();
+    }
+
+    async saveUserData() {
         const userId = this.getUserId();
-        const userData = {
-            balance: this.balance,
-            lastActive: Date.now(),
-            gamesPlayed: this.gamesPlayed,
-            gamesWon: this.gamesWon
-        };
-        localStorage.setItem(`user_${userId}`, JSON.stringify(userData));
+        const userRef = ref(database, `users/${userId}`);
+        try {
+            await update(userRef, {
+                balance: this.balance,
+                lastActive: Date.now(),
+                gamesPlayed: this.gamesPlayed,
+                gamesWon: this.gamesWon
+            });
+        } catch (error) {
+            console.error('Error saving user data:', error);
+        }
     }
 
     getUserId() {
@@ -252,27 +277,31 @@ class BaccaratGame {
         return userId;
     }
 
-    loadBalance() {
+    async loadUserData() {
         const userId = this.getUserId();
-        const userData = localStorage.getItem(`user_${userId}`);
-        if (userData) {
-            try {
-                const data = JSON.parse(userData);
-                this.balance = parseFloat(data.balance) || 100;
-                this.gamesPlayed = data.gamesPlayed || 0;
-                this.gamesWon = data.gamesWon || 0;
-            } catch (e) {
-                console.error('Error loading user data:', e);
-                this.balance = 100;
-                this.saveBalance();
+        const userRef = ref(database, `users/${userId}`);
+        
+        try {
+            const snapshot = await get(userRef);
+            if (snapshot.exists()) {
+                return snapshot.val();
+            } else {
+                const newUser = {
+                    balance: 100,
+                    lastActive: Date.now(),
+                    gamesPlayed: 0,
+                    gamesWon: 0
+                };
+                await set(userRef, newUser);
+                return newUser;
             }
-        } else {
-            this.balance = 100;
-            this.saveBalance();
+        } catch (error) {
+            console.error('Error loading user data:', error);
+            return null;
         }
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     new BaccaratGame();
-}); 
+});
