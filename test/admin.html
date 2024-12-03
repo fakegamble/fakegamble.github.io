@@ -20,6 +20,11 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        .device-id {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
         .edit-balance {
             padding: 8px;
             margin-right: 10px;
@@ -38,11 +43,6 @@
         button:hover {
             background: #45a049;
         }
-        h1 {
-            color: #333;
-            border-bottom: 2px solid #4CAF50;
-            padding-bottom: 10px;
-        }
         .balance-display {
             font-size: 1.2em;
             color: #2196F3;
@@ -51,14 +51,13 @@
     </style>
 </head>
 <body>
-    <h1>Baccarat Admin Panel</h1>
-    <div id="players-list">Loading players...</div>
+    <h1>Baccarat Admin Panel - Device Balances</h1>
+    <div id="players-list">Loading devices...</div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Your Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBWSvCUgql8OcoubCi0GeAvVnCW_3bEsWw",
             authDomain: "views-d0b3b.firebaseapp.com",
@@ -73,8 +72,8 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Function to update player balance
-        async function updatePlayerBalance(playerId, newBalance) {
+        // Update balance function
+        async function updatePlayerBalance(deviceId, newBalance) {
             try {
                 const balanceNum = parseInt(newBalance);
                 if (isNaN(balanceNum)) {
@@ -82,11 +81,11 @@
                     return;
                 }
                 
-                await setDoc(doc(db, "players", playerId), {
+                await setDoc(doc(db, "players", deviceId), {
                     balance: balanceNum
                 }, { merge: true });
                 
-                console.log(`Balance updated for player ${playerId}`);
+                console.log(`Balance updated for device ${deviceId}`);
             } catch (error) {
                 console.error("Error updating balance:", error);
                 alert("Error updating balance: " + error.message);
@@ -103,7 +102,7 @@
             playersList.innerHTML = '';
 
             if (snapshot.empty) {
-                playersList.innerHTML = '<p>No players found. Start playing to see balances here!</p>';
+                playersList.innerHTML = '<p>No active devices found. Players need to start playing to appear here!</p>';
                 return;
             }
 
@@ -112,7 +111,7 @@
                 const playerCard = document.createElement('div');
                 playerCard.className = 'player-card';
                 playerCard.innerHTML = `
-                    <h3>Player: ${doc.id}</h3>
+                    <div class="device-id">Device ID: ${doc.id}</div>
                     <p class="balance-display">Current Balance: $${player.balance}</p>
                     <input type="number" class="edit-balance" value="${player.balance}">
                     <button onclick="updatePlayerBalance('${doc.id}', this.previousElementSibling.value)">

@@ -105,30 +105,35 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Game state
-        let playerBalance = 1000;
-        let currentBet = 0;
-        let currentBetType = null;
+        // Generate or get device ID
+        function getDeviceId() {
+            let deviceId = localStorage.getItem('deviceId');
+            if (!deviceId) {
+                deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('deviceId', deviceId);
+            }
+            return deviceId;
+        }
 
-        // Make functions globally available
-        window.playerBalance = playerBalance;
-        window.currentBet = currentBet;
-        window.currentBetType = currentBetType;
-
-        // Initialize player data
+        // Initialize player with device-specific save
         async function initializePlayer() {
+            const deviceId = getDeviceId();
+            const playerRef = doc(db, "players", deviceId);
+            
             try {
-                const playerRef = doc(db, "players", "player1");
-                const playerDoc = await getDoc(playerRef);
-                
-                if (playerDoc.exists()) {
-                    window.playerBalance = playerDoc.data().balance;
-                    document.getElementById('balance').textContent = window.playerBalance;
+                const docSnap = await getDoc(playerRef);
+                if (docSnap.exists()) {
+                    window.playerBalance = docSnap.data().balance;
                 } else {
+                    window.playerBalance = 1000; // Default starting balance
                     await setDoc(playerRef, { balance: window.playerBalance });
                 }
+                document.getElementById('balance').textContent = window.playerBalance;
             } catch (error) {
                 console.error("Error initializing player:", error);
+                // Fallback to local-only mode if Firebase fails
+                window.playerBalance = 1000;
+                document.getElementById('balance').textContent = window.playerBalance;
             }
         }
 
@@ -138,7 +143,8 @@
             document.getElementById('balance').textContent = window.playerBalance;
             
             try {
-                const playerRef = doc(db, "players", "player1");
+                const deviceId = getDeviceId();
+                const playerRef = doc(db, "players", deviceId);
                 await setDoc(playerRef, { balance: window.playerBalance }, { merge: true });
             } catch (error) {
                 console.error("Error updating balance:", error);
