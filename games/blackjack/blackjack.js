@@ -45,9 +45,11 @@ class BlackjackGame {
             }
         }
         
-        for (let i = this.deck.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]];
+        for (let shuffle = 0; shuffle < 3; shuffle++) {
+            for (let i = this.deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]];
+            }
         }
     }
 
@@ -226,6 +228,7 @@ class BlackjackGame {
     async playDealerHand() {
         if (!this.gameActive) return;
 
+        // Reveal dealer's hidden card
         const dealerCards = this.dealerCards.querySelectorAll('.card');
         if (dealerCards[1]) {
             dealerCards[1].classList.remove('hidden');
@@ -235,7 +238,10 @@ class BlackjackGame {
             }
         }
 
-        while (this.calculateHand(this.dealerHand) < 17) {
+        // Dealer draws cards randomly between 16 and 19
+        const targetValue = 16 + Math.floor(Math.random() * 4);
+        
+        while (this.calculateHand(this.dealerHand) < targetValue) {
             await new Promise(resolve => setTimeout(resolve, 500));
 
             const { card, element } = this.drawCard();
