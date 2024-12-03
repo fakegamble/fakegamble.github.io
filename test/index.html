@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baccarat Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a472a;
+            color: white;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .cards {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .card {
+            background: white;
+            color: black;
+            padding: 20px;
+            border-radius: 5px;
+            min-width: 60px;
+            text-align: center;
+        }
+        .betting-area {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .bet-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .player-bet { background: #4CAF50; }
+        .banker-bet { background: #f44336; }
+        .tie-bet { background: #2196F3; }
+        .balance {
+            font-size: 24px;
+            margin: 20px 0;
+        }
+        #deal-button {
+            padding: 15px 30px;
+            background: #FFD700;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .bet-amount {
+            padding: 10px;
+            font-size: 16px;
+            width: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Baccarat</h1>
+        <div class="balance">Balance: $<span id="balance">1000</span></div>
+        <div class="betting-area">
+            <input type="number" id="bet-amount" class="bet-amount" value="100" min="1">
+            <button class="bet-button player-bet" onclick="placeBet('player')">Player</button>
+            <button class="bet-button banker-bet" onclick="placeBet('banker')">Banker</button>
+            <button class="bet-button tie-bet" onclick="placeBet('tie')">Tie</button>
+        </div>
+        <div class="hands">
+            <h2>Player Hand</h2>
+            <div class="cards" id="player-cards"></div>
+            <h2>Banker Hand</h2>
+            <div class="cards" id="banker-cards"></div>
+        </div>
+        <button id="deal-button" onclick="deal()">Deal</button>
+        <div id="result"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWSvCUgql8OcoubCi0GeAvVnCW_3bEsWw",
+            authDomain: "views-d0b3b.firebaseapp.com",
+            projectId: "views-d0b3b",
+            storageBucket: "views-d0b3b.firebasestorage.app",
+            messagingSenderId: "27855410097",
+            appId: "1:27855410097:web:02e7a49a01be10ddc32390",
+            measurementId: "G-5DPDZYDRFJ"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Game state
+        let playerBalance = 1000;
+        let currentBet = 0;
+        let currentBetType = null;
+
+        // Make functions globally available
+        window.playerBalance = playerBalance;
+        window.currentBet = currentBet;
+        window.currentBetType = currentBetType;
+
+        // Initialize player data
+        async function initializePlayer() {
+            try {
+                const playerRef = doc(db, "players", "player1");
+                const playerDoc = await getDoc(playerRef);
+                
+                if (playerDoc.exists()) {
+                    window.playerBalance = playerDoc.data().balance;
+                    document.getElementById('balance').textContent = window.playerBalance;
+                } else {
+                    await setDoc(playerRef, { balance: window.playerBalance });
+                }
+            } catch (error) {
+                console.error("Error initializing player:", error);
+            }
+        }
+
+        // Update balance function
+        window.updateBalance = async function(newBalance) {
+            window.playerBalance = newBalance;
+            document.getElementById('balance').textContent = window.playerBalance;
+            
+            try {
+                const playerRef = doc(db, "players", "player1");
+                await setDoc(playerRef, { balance: window.playerBalance }, { merge: true });
+            } catch (error) {
+                console.error("Error updating balance:", error);
+            }
+        };
+
+        // Place bet function
+        window.placeBet = function(type) {
+            const amount = parseInt(document.getElementById('bet-amount').value);
+            if (isNaN(amount) || amount <= 0) {
+                alert('Please enter a valid bet amount!');
+                return;
+            }
+            if (amount > window.playerBalance) {
+                alert('Insufficient funds!');
+                return;
+            }
+
+            window.currentBet = amount;
+            window.currentBetType = type;
+            window.updateBalance(window.playerBalance - amount);
+        };
+
+        // Deal function
+        window.deal = function() {
+            if (!window.currentBetType) {
+                alert('Please place a bet first!');
+                return;
+            }
+
+            const playerHand = [
+                Math.floor(Math.random() * 13) + 1,
+                Math.floor(Math.random() * 13) + 1
+            ];
+            const bankerHand = [
+                Math.floor(Math.random() * 13) + 1,
+                Math.floor(Math.random() * 13) + 1
+            ];
+
+            document.getElementById('player-cards').innerHTML = 
+                playerHand.map(card => `<div class="card">${card}</div>`).join('');
+            document.getElementById('banker-cards').innerHTML = 
+                bankerHand.map(card => `<div class="card">${card}</div>`).join('');
+
+            const playerTotal = playerHand.reduce((sum, card) => sum + (card > 9 ? 0 : card), 0) % 10;
+            const bankerTotal = bankerHand.reduce((sum, card) => sum + (card > 9 ? 0 : card), 0) % 10;
+
+            let result;
+            if (playerTotal > bankerTotal) result = 'player';
+            else if (bankerTotal > playerTotal) result = 'banker';
+            else result = 'tie';
+
+            if (result === window.currentBetType) {
+                let winnings = window.currentBet * (result === 'tie' ? 8 : 2);
+                window.updateBalance(window.playerBalance + winnings);
+                document.getElementById('result').textContent = 
+                    `You won $${winnings}! (${playerTotal} vs ${bankerTotal})`;
+            } else {
+                document.getElementById('result').textContent = 
+                    `You lost! (${playerTotal} vs ${bankerTotal})`;
+            }
+
+            window.currentBet = 0;
+            window.currentBetType = null;
+        };
+
+        // Initialize the game
+        initializePlayer();
+    </script>
+</body>
+</html>

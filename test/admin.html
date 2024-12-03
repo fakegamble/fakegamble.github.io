@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baccarat Admin Panel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .player-card {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .edit-balance {
+            padding: 8px;
+            margin-right: 10px;
+            width: 120px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 8px 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .balance-display {
+            font-size: 1.2em;
+            color: #2196F3;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Baccarat Admin Panel</h1>
+    <div id="players-list">Loading players...</div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWSvCUgql8OcoubCi0GeAvVnCW_3bEsWw",
+            authDomain: "views-d0b3b.firebaseapp.com",
+            projectId: "views-d0b3b",
+            storageBucket: "views-d0b3b.firebasestorage.app",
+            messagingSenderId: "27855410097",
+            appId: "1:27855410097:web:02e7a49a01be10ddc32390",
+            measurementId: "G-5DPDZYDRFJ"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Function to update player balance
+        async function updatePlayerBalance(playerId, newBalance) {
+            try {
+                const balanceNum = parseInt(newBalance);
+                if (isNaN(balanceNum)) {
+                    alert('Please enter a valid number');
+                    return;
+                }
+                
+                await setDoc(doc(db, "players", playerId), {
+                    balance: balanceNum
+                }, { merge: true });
+                
+                console.log(`Balance updated for player ${playerId}`);
+            } catch (error) {
+                console.error("Error updating balance:", error);
+                alert("Error updating balance: " + error.message);
+            }
+        }
+
+        // Make updatePlayerBalance available globally
+        window.updatePlayerBalance = updatePlayerBalance;
+
+        // Listen for player updates in real-time
+        const playersRef = collection(db, "players");
+        onSnapshot(playersRef, (snapshot) => {
+            const playersList = document.getElementById('players-list');
+            playersList.innerHTML = '';
+
+            if (snapshot.empty) {
+                playersList.innerHTML = '<p>No players found. Start playing to see balances here!</p>';
+                return;
+            }
+
+            snapshot.forEach((doc) => {
+                const player = doc.data();
+                const playerCard = document.createElement('div');
+                playerCard.className = 'player-card';
+                playerCard.innerHTML = `
+                    <h3>Player: ${doc.id}</h3>
+                    <p class="balance-display">Current Balance: $${player.balance}</p>
+                    <input type="number" class="edit-balance" value="${player.balance}">
+                    <button onclick="updatePlayerBalance('${doc.id}', this.previousElementSibling.value)">
+                        Update Balance
+                    </button>
+                `;
+                playersList.appendChild(playerCard);
+            });
+        });
+    </script>
+</body>
+</html>
