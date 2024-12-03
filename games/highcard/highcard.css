@@ -1,0 +1,98 @@
+@import url('../blackjack/blackjack.css');
+
+.game-table {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 2rem;
+    height: 100%;
+    justify-content: center;
+}
+
+.dealer-area,
+.player-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.area-label {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+}
+
+.card-space {
+    width: 140px;
+    height: 196px;
+    border: 2px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    transition: all 0.3s ease;
+}
+
+.card {
+    width: 100%;
+    height: 100%;
+    background: var(--panel-color);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    position: relative;
+    animation: dealCard 0.3s ease-out;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.card.red {
+    color: var(--danger-color);
+}
+
+.card.black {
+    color: var(--text-color);
+}
+
+.game-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.win-rate,
+.total-played {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.win-rate-label,
+.total-played-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.win-rate-value,
+.total-played-value {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+@media (max-width: 768px) {
+    .card-space {
+        width: 100px;
+        height: 140px;
+        font-size: 1.6rem;
+    }
+
+    .game-table {
+        padding: 1rem;
+        gap: 1.5rem;
+    }
+} 

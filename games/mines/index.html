@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta property="og:title" content="Fake Gamble - Mines bomb game">
+    <meta property="og:description" content="Play free casino games with virtual currency. No real money involved, just pure entertainment!">
+    <meta property="og:image" content="/assets/favicon.png">
+    <meta property="og:url" content="https://fakegamble.github.io/">
+    <meta property="og:type" content="website">
+    <title>Fake Gamble | Mines </title>
+    <link rel="stylesheet" href="mines.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+</head>
+<body>
+    <div class="game-wrapper">
+        <div class="sidebar">
+            <div class="sidebar-top">
+                <div class="mode-switch">
+                    <button class="mode-btn active" data-mode="manual">Manual</button>
+                    <button class="mode-btn" data-mode="auto">Auto</button>
+                </div>
+                
+                <div class="bet-panel">
+                    <div class="amount-control">
+                        <label>Amount</label>
+                        <div class="amount-input">
+                            <input type="number" id="betAmount" value="0.00" step="0.01">
+                            <div class="amount-modifiers">
+                                <button class="modifier-btn half-btn">½</button>
+                                <button class="modifier-btn double-btn">2×</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mines-control">
+                        <label>Mines</label>
+                        <select id="minesCount">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                            <option value="13">13</option>
+                            <option value="14">14</option>
+                            <option value="15">15</option>
+                            <option value="16">16</option>
+                            <option value="17">17</option>
+                            <option value="18">18</option>
+                            <option value="19">19</option>
+                            <option value="20">20</option>
+                            <option value="21">21</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button id="actionButton" class="action-btn">Play</button>
+
+                <div class="balance-display">
+                    <span class="balance-label">Balance</span>
+                    <span class="balance-amount">$100.00</span>
+                </div>
+
+                <div class="game-info">
+                    <div class="tiles-info">
+                        <span class="revealed-count">0</span>
+                        <span class="separator">/</span>
+                        <span class="total-tiles">25</span>
+                        <span class="tiles-label">Tiles</span>
+                    </div>
+                    <div class="profit-info">
+                        <span class="profit-label">Profit</span>
+                        <span class="profit-amount">$0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="game-grid"></div>
+        </div>
+        <div class="auto-panel" id="autoPanel">
+            <div class="auto-content">
+                <h3>Auto Settings</h3>
+                <div class="auto-controls">
+                    <div class="auto-input">
+                        <label>Amount</label>
+                        <input type="number" id="autoAmount" value="1.00" step="0.01">
+                    </div>
+                    <div class="auto-input">
+                        <label>Mines</label>
+                        <input type="number" id="autoMines" value="3" min="1" max="24">
+                    </div>
+                    <div class="auto-input">
+                        <label>Games</label>
+                        <input type="number" id="autoGames" value="10" min="1">
+                    </div>
+                    <div class="auto-input">
+                        <label>Stop on Profit</label>
+                        <input type="number" id="autoProfit" value="10.00" step="0.01">
+                    </div>
+                    <div class="auto-input">
+                        <label>Stop on Loss</label>
+                        <input type="number" id="autoLoss" value="10.00" step="0.01">
+                    </div>
+                </div>
+                <div class="auto-buttons">
+                    <button id="startAutoPlay" class="start-auto-btn">Start</button>
+                    <button id="closeAutoPlay" class="close-auto-btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+        <div class="result-overlay" id="resultOverlay">
+            <div class="result-content">
+                <div class="result-icon"></div>
+                <div class="result-text-wrapper">
+                    <span class="result-text"></span>
+                    <span class="result-amount"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="auto-overlay"></div>
+    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { 
+            getFirestore, 
+            doc, 
+            setDoc, 
+            getDoc,
+            onSnapshot 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWSvCUgql8OcoubCi0GeAvVnCW_3bEsWw",
+            authDomain: "views-d0b3b.firebaseapp.com",
+            databaseURL: "https://views-d0b3b-default-rtdb.firebaseio.com",
+            projectId: "views-d0b3b",
+            storageBucket: "views-d0b3b.firebasestorage.app",
+            messagingSenderId: "27855410097",
+            appId: "1:27855410097:web:02e7a49a01be10ddc32390",
+            measurementId: "G-5DPDZYDRFJ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Generate or get device ID
+        function getDeviceId() {
+            let deviceId = localStorage.getItem('deviceId');
+            if (!deviceId) {
+                deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('deviceId', deviceId);
+            }
+            return deviceId;
+        }
+
+        // Update balance function
+        async function updateBalance(newBalance) {
+            const deviceId = getDeviceId();
+            const playerRef = doc(db, "players", deviceId);
+            await setDoc(playerRef, { balance: newBalance }, { merge: true });
+            return newBalance;
+        }
+
+        // Initialize player function
+        async function initializePlayer() {
+            const deviceId = getDeviceId();
+            const playerRef = doc(db, "players", deviceId);
+            const playerDoc = await getDoc(playerRef);
+            
+            if (!playerDoc.exists()) {
+                await setDoc(playerRef, { balance: 100 }); // Default starting balance
+                window.playerBalance = 100;
+            } else {
+                window.playerBalance = playerDoc.data().balance;
+            }
+            
+            // Dispatch event when balance is initialized
+            window.dispatchEvent(new Event('balanceInitialized'));
+        }
+
+        // Make everything globally available
+        window.db = db;
+        window.doc = doc;
+        window.getDeviceId = getDeviceId;
+        window.updateBalance = updateBalance;
+        window.onSnapshot = onSnapshot;
+        window.initializePlayer = initializePlayer;
+
+        // Initialize player balance
+        window.initializePlayer();
+    </script>
+    <script src="mines.js"></script>
+    <script src="../../scripts/viewer-tracker.js"></script>
+</body>
+</html>

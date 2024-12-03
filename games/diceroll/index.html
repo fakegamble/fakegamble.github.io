@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta property="og:title" content="Fake Gamble - Diceroll game">
+    <meta property="og:description" content="Play free casino games with virtual currency. No real money involved, just pure entertainment!">
+    <meta property="og:image" content="/assets/favicon.png">
+    <meta property="og:url" content="https://fakegamble.github.io/">
+    <meta property="og:type" content="website">
+    <title>Fake Gamble | Diceroll </title>
+    <link rel="stylesheet" href="diceroll.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+</head>
+<body>
+    <div class="game-wrapper">
+        <div class="sidebar">
+            <div class="sidebar-top">
+                <div class="bet-panel">
+                    <div class="amount-control">
+                        <label>Bet Amount</label>
+                        <div class="amount-input">
+                            <input type="number" id="betAmount" value="1.00" step="0.01">
+                            <div class="amount-modifiers">
+                                <button class="modifier-btn half-btn">½</button>
+                                <button class="modifier-btn double-btn">2×</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="target-control">
+                        <label>Target Number (7)</label>
+                        <div class="target-buttons">
+                            <button id="underButton" class="target-btn active">Under</button>
+                            <button id="overButton" class="target-btn">Over</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="actionButton" class="action-btn">Roll Dice</button>
+
+                <div class="balance-display">
+                    <span class="balance-label">Balance</span>
+                    <span class="balance-amount">$100.00</span>
+                </div>
+
+                <div class="game-info">
+                    <div class="win-rate">
+                        <span class="win-rate-label">Win Rate</span>
+                        <span class="win-rate-value">0%</span>
+                    </div>
+                    <div class="total-played">
+                        <span class="total-played-label">Games Played</span>
+                        <span class="total-played-value">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="dice-table">
+                <div class="dice-container">
+                    <div class="dice" id="dice1">
+                        <div class="dot"></div>
+                    </div>
+                    <div class="dice" id="dice2">
+                        <div class="dot"></div>
+                    </div>
+                </div>
+                <div class="roll-sum">
+                    <span class="sum-label">Sum</span>
+                    <span class="sum-value">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="result-overlay">
+            <div class="result-content">
+                <div class="result-text-wrapper">
+                    <span class="result-text"></span>
+                    <span class="result-amount"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { 
+            getFirestore, 
+            doc, 
+            setDoc, 
+            getDoc,
+            onSnapshot 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWSvCUgql8OcoubCi0GeAvVnCW_3bEsWw",
+            authDomain: "views-d0b3b.firebaseapp.com",
+            projectId: "views-d0b3b",
+            storageBucket: "views-d0b3b.firebasestorage.app",
+            messagingSenderId: "27855410097",
+            appId: "1:27855410097:web:02e7a49a01be10ddc32390",
+            measurementId: "G-5DPDZYDRFJ"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Generate or get device ID
+        function getDeviceId() {
+            let deviceId = localStorage.getItem('deviceId');
+            if (!deviceId) {
+                deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('deviceId', deviceId);
+            }
+            return deviceId;
+        }
+
+        // Make everything globally available
+        window.db = db;
+        window.doc = doc;
+        window.getDeviceId = getDeviceId;
+        window.onSnapshot = onSnapshot;
+        
+        window.updateBalance = async function(newBalance) {
+            window.playerBalance = newBalance;
+            document.querySelector('.balance-amount').textContent = `$${window.playerBalance.toFixed(2)}`;
+            
+            try {
+                const deviceId = getDeviceId();
+                const playerRef = doc(db, "players", deviceId);
+                await setDoc(playerRef, { balance: window.playerBalance }, { merge: true });
+            } catch (error) {
+                console.error("Error updating balance:", error);
+            }
+        };
+
+        // Initialize player balance
+        window.initializePlayer = async function() {
+            const deviceId = getDeviceId();
+            const playerRef = doc(db, "players", deviceId);
+            
+            try {
+                const docSnap = await getDoc(playerRef);
+                if (docSnap.exists()) {
+                    window.playerBalance = docSnap.data().balance;
+                } else {
+                    window.playerBalance = 100; // Default starting balance
+                    await setDoc(playerRef, { balance: window.playerBalance });
+                }
+                document.querySelector('.balance-amount').textContent = `$${window.playerBalance.toFixed(2)}`;
+                window.dispatchEvent(new Event('balanceInitialized'));
+            } catch (error) {
+                console.error("Error initializing player:", error);
+                window.playerBalance = 100;
+                document.querySelector('.balance-amount').textContent = `$${window.playerBalance.toFixed(2)}`;
+                window.dispatchEvent(new Event('balanceInitialized'));
+            }
+        };
+
+        // Initialize on page load
+        window.initializePlayer();
+    </script>
+    <script src="diceroll.js"></script>
+</body>
+</html> 
