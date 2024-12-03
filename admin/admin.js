@@ -1,3 +1,6 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
 class AdminDashboard {
     constructor() {
         // Check if already initialized
@@ -5,12 +8,25 @@ class AdminDashboard {
             return window.adminDashboard;
         }
         
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWSvCUgql8OcoubCi0GeAvVnCW_3bEsWw",
+            authDomain: "views-d0b3b.firebaseapp.com",
+            projectId: "views-d0b3b",
+            storageBucket: "views-d0b3b.firebasestorage.app",
+            messagingSenderId: "27855410097",
+            appId: "1:27855410097:web:02e7a49a01be10ddc32390",
+            measurementId: "G-5DPDZYDRFJ"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        this.database = getDatabase(app);
+        
         this.users = new Map();
         this.initializeDOM();
         this.initializeEventListeners();
         this.checkAuth();
         
-        // Store instance globally
         window.adminDashboard = this;
     }
 
@@ -118,33 +134,27 @@ class AdminDashboard {
     }
 
     startRealtimeUpdates() {
-        this.fetchUsers(); // Initial fetch
-        this.updateInterval = setInterval(() => this.fetchUsers(), 2000);
+        this.fetchUsers();
     }
 
     async fetchUsers() {
-        const users = new Map();
+        const usersRef = ref(this.database, 'users');
         
-        // Iterate through localStorage
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('user_')) {
-                try {
-                    const userData = JSON.parse(localStorage.getItem(key));
-                    if (userData && typeof userData === 'object') {
-                        users.set(key, {
-                            ...userData,
-                            id: key.replace('user_', '')
-                        });
-                    }
-                } catch (e) {
-                    console.error('Error parsing user data:', e);
-                }
-            }
-        }
-        
-        this.users = users;
-        this.updateUI();
+        onValue(usersRef, (snapshot) => {
+            const users = new Map();
+            
+            snapshot.forEach((childSnapshot) => {
+                const userData = childSnapshot.val();
+                const userId = childSnapshot.key;
+                users.set(`user_${userId}`, {
+                    ...userData,
+                    id: userId
+                });
+            });
+            
+            this.users = users;
+            this.updateUI();
+        });
     }
 
     updateUI() {
@@ -228,15 +238,15 @@ class AdminDashboard {
         userData.balance = balance;
         userData.lastActive = Date.now();
         
-        localStorage.setItem(userId, JSON.stringify(userData));
-        this.fetchUsers();
+        const userRef = ref(this.database, `users/${userId.replace('user_', '')}`);
+        await update(userRef, userData);
     }
 
     async deleteUser(userId) {
         if (!confirm('Are you sure you want to delete this user?')) return;
         
-        localStorage.removeItem(userId);
-        this.fetchUsers();
+        const userRef = ref(this.database, `users/${userId.replace('user_', '')}`);
+        await remove(userRef);
     }
 
     filterUsers() {
