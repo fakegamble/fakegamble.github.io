@@ -126,6 +126,9 @@ class GameHub {
             if (timeLeft <= 0) {
                 clearInterval(this.cooldownTimer);
                 this.showNotification('You can add money again!', 'info');
+                // Save the current time as the last add money time
+                this.lastAddMoney = Date.now();
+                localStorage.setItem('lastAddMoney', this.lastAddMoney);
             }
         }, 1000);
     }
@@ -154,16 +157,25 @@ class GameHub {
         this.loadSavedColors();
 
         settingsBtn.addEventListener('click', () => {
-            settingsModal.classList.add('show');
+            settingsModal.style.display = 'flex';
+            setTimeout(() => {
+                settingsModal.classList.add('show');
+            }, 10);
         });
 
         closeSettings.addEventListener('click', () => {
             settingsModal.classList.remove('show');
+            setTimeout(() => {
+                settingsModal.style.display = 'none';
+            }, 300);
         });
 
         settingsModal.addEventListener('click', (e) => {
             if (e.target === settingsModal) {
                 settingsModal.classList.remove('show');
+                setTimeout(() => {
+                    settingsModal.style.display = 'none';
+                }, 300);
             }
         });
 

@@ -245,6 +245,146 @@
                 margin-right: 1rem;
             }
         }
+        .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 0.75rem 1rem;
+    background: rgba(30, 41, 59, 0.4);
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.search-box {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-box input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    padding: 0.5rem 0.5rem 0.5rem 2.5rem;
+    font-size: 0.875rem;
+}
+
+.search-box input:focus {
+    outline: none;
+}
+
+.search-box svg {
+    position: absolute;
+    left: 0.75rem;
+    color: var(--text-secondary);
+    width: 14px;
+    height: 14px;
+}
+
+.sort-select {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    appearance: none;
+    cursor: pointer;
+}
+
+.sort-select:focus {
+    outline: none;
+}
+
+.player-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-icon {
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-icon:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-icon.favorite {
+    color: #f59e0b;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background: rgba(30, 41, 59, 0.4);
+    padding: 1.25rem;
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stat-card h3 {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: normal;
+    margin: 0 0 0.5rem 0;
+}
+
+.stat-card .value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    .toolbar {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .sort-select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--border-radius);
+        background: rgba(15, 23, 42, 0.6);
+    }
+
+    .card {
+        padding: 1rem;
+    }
+
+    .account-info {
+        grid-template-columns: 1fr;
+    }
+
+    .input-group {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.5rem;
+    }
+
+    .input-group input {
+        width: 100%;
+    }
+}
     </style>
 </head>
 <body>
@@ -264,6 +404,36 @@
     </header>
 
     <main class="container">
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total Players</h3>
+                <div class="value" id="totalPlayers">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Balance</h3>
+                <div class="value" id="totalBalance">$0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Average Balance</h3>
+                <div class="value" id="avgBalance">$0</div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <div class="search-box">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                </svg>
+                <input type="text" id="searchInput" placeholder="Search players..." onkeyup="filterPlayers()">
+            </div>
+            <select class="sort-select" id="sortSelect" onchange="sortPlayers()">
+                <option value="balance-desc">Balance: High to Low</option>
+                <option value="balance-asc">Balance: Low to High</option>
+                <option value="id-asc">ID: A to Z</option>
+                <option value="id-desc">ID: Z to A</option>
+            </select>
+        </div>
+
         <div id="players-list">
             <div class="loading-state">Loading accounts...</div>
         </div>
@@ -271,7 +441,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, onSnapshot, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
@@ -418,6 +588,7 @@
         function listenForBalanceUpdates() {
             const playersRef = collection(db, "players");
             onSnapshot(playersRef, (snapshot) => {
+                // Update individual player cards
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === "modified") {
                         const player = change.doc.data();
@@ -428,6 +599,23 @@
                         }
                     }
                 });
+
+                // Update statistics
+                let totalBalance = 0;
+                let playerCount = 0;
+
+                snapshot.forEach((doc) => {
+                    const player = doc.data();
+                    totalBalance += player.balance || 0;
+                    playerCount++;
+                });
+
+                const avgBalance = playerCount > 0 ? totalBalance / playerCount : 0;
+
+                // Update statistics display
+                document.getElementById('totalPlayers').textContent = playerCount;
+                document.getElementById('totalBalance').textContent = `$${totalBalance.toLocaleString()}`;
+                document.getElementById('avgBalance').textContent = `$${avgBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
             });
         }
 
@@ -447,6 +635,73 @@
             } catch (error) {
                 console.error("Error updating balance:", error);
                 alert("Error updating balance: " + error.message);
+            }
+        }
+
+        window.filterPlayers = function() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.card');
+            
+            cards.forEach(card => {
+                const deviceId = card.querySelector('h3').textContent.toLowerCase();
+                const balance = parseFloat(card.querySelector('.balance').textContent.replace('Current Balance: $', ''));
+                
+                // Show/hide based on search term
+                const matchesSearch = deviceId.includes(searchTerm);
+                card.style.display = matchesSearch ? 'block' : 'none';
+            });
+        }
+
+        window.sortPlayers = function() {
+            const sortValue = document.getElementById('sortSelect').value;
+            const playersList = document.getElementById('players-list');
+            const cards = Array.from(playersList.getElementsByClassName('card'));
+            
+            cards.sort((a, b) => {
+                const aBalance = parseFloat(a.querySelector('.balance').textContent.replace('Current Balance: $', ''));
+                const bBalance = parseFloat(b.querySelector('.balance').textContent.replace('Current Balance: $', ''));
+                const aId = a.querySelector('h3').textContent.toLowerCase();
+                const bId = b.querySelector('h3').textContent.toLowerCase();
+                
+                switch(sortValue) {
+                    case 'balance-desc':
+                        return bBalance - aBalance;
+                    case 'balance-asc':
+                        return aBalance - bBalance;
+                    case 'id-asc':
+                        return aId.localeCompare(bId);
+                    case 'id-desc':
+                        return bId.localeCompare(aId);
+                    default:
+                        return 0;
+                }
+            });
+            
+            // Clear and re-append sorted cards
+            cards.forEach(card => playersList.appendChild(card));
+        }
+
+        window.resetAllPlayers = async function() {
+            if (!confirm('Are you sure you want to reset all players? This will set all balances to 0.')) {
+                return;
+            }
+
+            try {
+                const playersRef = collection(db, "players");
+                const snapshot = await getDocs(playersRef);
+                
+                const batch = writeBatch(db);
+                
+                snapshot.forEach((doc) => {
+                    batch.set(doc.ref, { balance: 0 }, { merge: true });
+                });
+                
+                await batch.commit();
+                
+                alert('All players have been reset successfully!');
+            } catch (error) {
+                console.error("Error resetting players:", error);
+                alert("Error resetting players: " + error.message);
             }
         }
 
