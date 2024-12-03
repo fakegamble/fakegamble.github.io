@@ -679,94 +679,54 @@ html {
 }
 
 @media (max-width: 768px) {
-    .main-header {
-        padding: 0.75rem 0;
-        transform: translateY(0);
-        will-change: transform;
-        transition: transform 0.3s ease;
-    }
-
-    .main-header.header-hidden {
-        transform: translateY(-100%);
-    }
-
     .header-content {
         padding: 0 1rem;
         flex-direction: row;
         align-items: center;
-        gap: 0.75rem;
-    }
-
-    .logo-section {
-        flex: 0 0 auto;
-    }
-
-    .logo {
         gap: 0.5rem;
     }
 
-    .logo h1 {
-        font-size: 1.25rem;
-    }
-
-    .logo .material-icons {
-        font-size: 1.5rem;
-    }
-
-    .header-right {
-        flex: 1;
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
     .balance-display {
+        padding: 0.5rem 0.75rem;
+        min-width: 0;
         flex: 0 1 auto;
-        padding: 0.625rem 1rem;
-        margin: 0;
-        min-width: 120px;
-    }
-
-    .balance-label {
-        display: none;
-    }
-
-    .balance-amount {
-        font-size: 0.9rem;
-        white-space: nowrap;
     }
 
     .add-funds,
     .settings-btn {
-        padding: 0.625rem;
-        flex: 0 0 auto;
+        padding: 0.5rem;
     }
 
     .add-funds .material-icons,
     .settings-btn .material-icons {
         font-size: 1.25rem;
     }
+
+    .logo h1 {
+        font-size: 1.125rem;
+    }
+
+    .logo .material-icons {
+        font-size: 1.25rem;
+    }
 }
 
-/* Extra small screen optimization */
 @media (max-width: 380px) {
     .header-content {
         padding: 0 0.5rem;
     }
 
     .logo h1 {
-        font-size: 1.125rem;
+        font-size: 1rem;
     }
 
     .balance-display {
-        padding: 0.5rem 0.75rem;
-        min-width: 100px;
+        padding: 0.375rem 0.5rem;
     }
 
     .add-funds,
     .settings-btn {
-        padding: 0.5rem;
+        padding: 0.375rem;
     }
 }
 
