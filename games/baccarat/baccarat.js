@@ -1,6 +1,6 @@
 class BaccaratGame {
     constructor() {
-        this.balance = parseFloat(localStorage.getItem('gameBalance')) || 100;
+        this.loadBalance();
         this.betAmount = 1.00;
         this.gameActive = false;
         this.selectedBet = null;
@@ -216,8 +216,7 @@ class BaccaratGame {
         document.querySelector('.win-rate-value').textContent = `${winRate}%`;
         document.querySelector('.total-played-value').textContent = this.gamesPlayed;
         
-        localStorage.setItem('baccarat_gamesPlayed', this.gamesPlayed);
-        localStorage.setItem('baccarat_gamesWon', this.gamesWon);
+        this.saveBalance();
     }
 
     updateBalanceDisplay() {
@@ -234,7 +233,43 @@ class BaccaratGame {
     }
 
     saveBalance() {
-        localStorage.setItem('gameBalance', this.balance.toFixed(2));
+        const userId = this.getUserId();
+        const userData = {
+            balance: this.balance,
+            lastActive: Date.now(),
+            gamesPlayed: this.gamesPlayed,
+            gamesWon: this.gamesWon
+        };
+        localStorage.setItem(`user_${userId}`, JSON.stringify(userData));
+    }
+
+    getUserId() {
+        let userId = localStorage.getItem('userId');
+        if (!userId) {
+            userId = 'user_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('userId', userId);
+        }
+        return userId;
+    }
+
+    loadBalance() {
+        const userId = this.getUserId();
+        const userData = localStorage.getItem(`user_${userId}`);
+        if (userData) {
+            try {
+                const data = JSON.parse(userData);
+                this.balance = parseFloat(data.balance) || 100;
+                this.gamesPlayed = data.gamesPlayed || 0;
+                this.gamesWon = data.gamesWon || 0;
+            } catch (e) {
+                console.error('Error loading user data:', e);
+                this.balance = 100;
+                this.saveBalance();
+            }
+        } else {
+            this.balance = 100;
+            this.saveBalance();
+        }
     }
 }
 
