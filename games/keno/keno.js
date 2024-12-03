@@ -116,6 +116,7 @@ class KenoGame {
         setTimeout(() => {
             this.gameActive = false;
             this.actionButton.disabled = false;
+            this.resetBoard();
         }, 2000);
     }
 
@@ -178,6 +179,27 @@ class KenoGame {
 
     saveBalance() {
         localStorage.setItem('gameBalance', this.balance.toFixed(2));
+    }
+
+    resetBoard() {
+        // Clear drawn numbers
+        this.drawnNumbers.clear();
+        this.drawnNumbersDisplay.innerHTML = '';
+        
+        // Clear selected numbers
+        this.selectedNumbers.clear();
+        
+        // Reset all cell styles
+        const cells = this.kenoBoard.querySelectorAll('.number-cell');
+        cells.forEach(cell => {
+            cell.classList.remove('selected', 'drawn', 'hit');
+        });
+        
+        // Update selected count display
+        this.selectedCountDisplay.textContent = '0';
+        
+        // Disable action button until numbers are selected
+        this.actionButton.disabled = true;
     }
 }
 

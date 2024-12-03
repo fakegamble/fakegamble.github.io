@@ -11,6 +11,7 @@ class GameHub {
         if (this.getTimeLeftOnCooldown() > 0) {
             this.startCooldownTimer();
         }
+        this.initializeHeaderScroll();
     }
 
     initializeUI() {
@@ -246,6 +247,44 @@ class GameHub {
             }
             lastTouchEnd = now;
         }, { passive: false });
+    }
+
+    initializeHeaderScroll() {
+        let lastScroll = 0;
+        let headerTimeout;
+        const header = document.querySelector('.main-header');
+        const SCROLL_THRESHOLD = 50; // Minimum scroll before hiding/showing
+        
+        window.addEventListener('scroll', () => {
+            clearTimeout(headerTimeout);
+            
+            const currentScroll = window.pageYOffset;
+            
+            if (currentScroll <= 0) {
+                header.classList.remove('header-hidden');
+                return;
+            }
+            
+            if (currentScroll > lastScroll && currentScroll > SCROLL_THRESHOLD) {
+                header.classList.add('header-hidden');
+            } 
+
+            else if (currentScroll < lastScroll) {
+                header.classList.remove('header-hidden');
+            }
+            
+            lastScroll = currentScroll;
+            
+            headerTimeout = setTimeout(() => {
+                header.classList.remove('header-hidden');
+            }, 3000);
+        }, { passive: true });
+        
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches[0].clientY < 50) {
+                header.classList.remove('header-hidden');
+            }
+        }, { passive: true });
     }
 }
 
