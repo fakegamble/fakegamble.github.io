@@ -98,23 +98,40 @@
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 
-                // Check for game-specific balances and stats
-                if (key === 'gameBalance') {
-                    const balance = parseFloat(localStorage.getItem(key)) || 0;
+                // Check for game-specific stats
+                if (key.includes('_gamesPlayed') || key === 'minesGameState') {
+                    // Extract user data from various sources
+                    const balance = parseFloat(localStorage.getItem('gameBalance')) || 0;
+                    
+                    // Get games played stats
+                    const gamesPlayed = {
+                        mines: parseInt(localStorage.getItem('minesGameState')?.gamesPlayed) || 0,
+                        blackjack: parseInt(localStorage.getItem('blackjack_gamesPlayed')) || 0,
+                        baccarat: parseInt(localStorage.getItem('baccarat_gamesPlayed')) || 0,
+                        coinflip: parseInt(localStorage.getItem('coinflip_gamesPlayed')) || 0,
+                        diceroll: parseInt(localStorage.getItem('diceroll_gamesPlayed')) || 0,
+                        highcard: parseInt(localStorage.getItem('highcard_gamesPlayed')) || 0,
+                        keno: parseInt(localStorage.getItem('keno_gamesPlayed')) || 0
+                    };
+
+                    // Get games won stats
+                    const gamesWon = {
+                        mines: parseInt(localStorage.getItem('minesGameState')?.totalWins) || 0,
+                        blackjack: parseInt(localStorage.getItem('blackjack_gamesWon')) || 0,
+                        baccarat: parseInt(localStorage.getItem('baccarat_gamesWon')) || 0,
+                        coinflip: parseInt(localStorage.getItem('coinflip_gamesWon')) || 0,
+                        diceroll: parseInt(localStorage.getItem('diceroll_gamesWon')) || 0,
+                        highcard: parseInt(localStorage.getItem('highcard_gamesWon')) || 0,
+                        keno: parseInt(localStorage.getItem('keno_gamesWon')) || 0
+                    };
+
                     const userId = localStorage.getItem('userId') || 'Anonymous';
                     
                     if (!users.has(userId)) {
                         users.set(userId, {
                             gameBalance: balance,
-                            gamesPlayed: {
-                                mines: parseInt(localStorage.getItem('minesGameState')?.gamesPlayed) || 0,
-                                blackjack: parseInt(localStorage.getItem('blackjack_gamesPlayed')) || 0,
-                                baccarat: parseInt(localStorage.getItem('baccarat_gamesPlayed')) || 0,
-                                coinflip: parseInt(localStorage.getItem('coinflip_gamesPlayed')) || 0,
-                                diceroll: parseInt(localStorage.getItem('diceroll_gamesPlayed')) || 0,
-                                highcard: parseInt(localStorage.getItem('highcard_gamesPlayed')) || 0,
-                                keno: parseInt(localStorage.getItem('keno_gamesPlayed')) || 0
-                            }
+                            gamesPlayed: gamesPlayed,
+                            gamesWon: gamesWon
                         });
                     }
                 }
@@ -123,13 +140,25 @@
             // Display users
             for (let [userId, data] of users) {
                 const totalGamesPlayed = Object.values(data.gamesPlayed).reduce((a, b) => a + b, 0);
+                const totalGamesWon = Object.values(data.gamesWon).reduce((a, b) => a + b, 0);
+                const winRate = totalGamesPlayed > 0 ? ((totalGamesWon / totalGamesPlayed) * 100).toFixed(1) : '0.0';
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${userId}</td>
                     <td>
                         Balance: $${data.gameBalance.toFixed(2)}<br>
-                        Total Games: ${totalGamesPlayed}
+                        Games Played: ${totalGamesPlayed}<br>
+                        Win Rate: ${winRate}%<br>
+                        <small style="color: #666;">
+                            Mines: ${data.gamesPlayed.mines} | 
+                            Blackjack: ${data.gamesPlayed.blackjack} | 
+                            Baccarat: ${data.gamesPlayed.baccarat} |
+                            Coinflip: ${data.gamesPlayed.coinflip} |
+                            Dice: ${data.gamesPlayed.diceroll} |
+                            High Card: ${data.gamesPlayed.highcard} |
+                            Keno: ${data.gamesPlayed.keno}
+                        </small>
                     </td>
                     <td>
                         <button class="action-btn" onclick="resetBalance('${userId}')">Reset Balance</button>
@@ -143,29 +172,25 @@
             if (users.size === 0) {
                 userTable.innerHTML = `
                     <tr>
-                        <td colspan="3" style="text-align: center;">No balances found.</td>
+                        <td colspan="3" style="text-align: center;">No users found.</td>
                     </tr>
                 `;
             }
         }
 
         function resetBalance(userId) {
-            if (confirm(`Reset balance for user ${userId}?`)) {
+            if (confirm('Reset all balances?')) {
                 localStorage.setItem('gameBalance', '0');
-                // Reset all game-specific balances
-                const games = ['mines', 'blackjack', 'baccarat', 'coinflip', 'diceroll', 'highcard', 'keno'];
-                games.forEach(game => {
-                    localStorage.removeItem(`${game}_gamesPlayed`);
-                    localStorage.removeItem(`${game}_gamesWon`);
-                });
+                localStorage.setItem('sharedGameBalance', '0');
                 loadUsers();
             }
         }
 
         function deleteUser(userId) {
-            if (confirm(`Delete user ${userId}?`)) {
-                // Clear all game-related data
-                localStorage.clear();
+            if (confirm('Delete all user data?')) {
+                localStorage.removeItem('gameBalance');
+                localStorage.removeItem('sharedGameBalance');
+                localStorage.removeItem('userId');
                 loadUsers();
             }
         }
