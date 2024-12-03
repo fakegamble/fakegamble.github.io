@@ -74,13 +74,11 @@
     </div>
 
     <script>
-        // Obfuscated admin code
-        const _0x2f1d=['4','1','8','5'];
-        const ADMIN_CODE = _0x2f1d.join('');
+        const ADMIN_CODE = '4185';
         
         function checkAdminCode() {
             const inputCode = document.getElementById('adminCode').value;
-            if (inputCode === atob('NDE4NQ==')) {  // Using base64 encoding
+            if (inputCode === ADMIN_CODE) {
                 document.getElementById('loginSection').style.display = 'none';
                 document.getElementById('adminContent').style.display = 'block';
                 localStorage.setItem('adminAuthenticated', 'true');
@@ -94,27 +92,36 @@
             const userTable = document.getElementById('userTable');
             userTable.innerHTML = '';
             
-            // Get the main balance values
-            const gameBalance = parseFloat(localStorage.getItem('gameBalance') || 0);
-            const sharedGameBalance = parseFloat(localStorage.getItem('sharedGameBalance') || 0);
-            const userId = localStorage.getItem('userId') || 'Unknown User';
+            // Get all localStorage keys
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                
+                // Look for any user IDs
+                if (key === 'userId') {
+                    const userId = localStorage.getItem(key);
+                    const gameBalance = parseFloat(localStorage.getItem('gameBalance') || 0);
+                    const sharedGameBalance = parseFloat(localStorage.getItem('sharedGameBalance') || 0);
+                    
+                    if (gameBalance > 0 || sharedGameBalance > 0) {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${userId}</td>
+                            <td>
+                                Game Balance: $${gameBalance.toFixed(2)}<br>
+                                Shared Balance: $${sharedGameBalance.toFixed(2)}
+                            </td>
+                            <td>
+                                <button class="action-btn" onclick="resetBalance('${userId}')">Reset Balance</button>
+                                <button class="action-btn" onclick="deleteUser('${userId}')">Delete User</button>
+                            </td>
+                        `;
+                        userTable.appendChild(row);
+                    }
+                }
+            }
             
-            // Create row for the user
-            if (gameBalance > 0 || sharedGameBalance > 0) {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${userId}</td>
-                    <td>
-                        Game Balance: $${gameBalance.toFixed(2)}<br>
-                        Shared Balance: $${sharedGameBalance.toFixed(2)}
-                    </td>
-                    <td>
-                        <button class="action-btn" onclick="resetBalance()">Reset Balance</button>
-                        <button class="action-btn" onclick="deleteUser()">Delete User</button>
-                    </td>
-                `;
-                userTable.appendChild(row);
-            } else {
+            // If no users found
+            if (userTable.innerHTML === '') {
                 userTable.innerHTML = `
                     <tr>
                         <td colspan="3" style="text-align: center;">No balances found.</td>
@@ -123,16 +130,16 @@
             }
         }
 
-        function resetBalance() {
-            if (confirm('Reset all balances?')) {
+        function resetBalance(userId) {
+            if (confirm(`Reset balance for user ${userId}?`)) {
                 localStorage.setItem('gameBalance', '0');
                 localStorage.setItem('sharedGameBalance', '0');
                 loadUsers();
             }
         }
 
-        function deleteUser() {
-            if (confirm('Delete all user data?')) {
+        function deleteUser(userId) {
+            if (confirm(`Delete user ${userId}?`)) {
                 localStorage.removeItem('gameBalance');
                 localStorage.removeItem('sharedGameBalance');
                 localStorage.removeItem('userId');
