@@ -12,7 +12,6 @@ class MinesGame {
         this.autoPlaySettings = null;
         this.autoPlayActive = false;
 
-        // Multiplier mapping based on mine count
         this.multiplierMap = {
             1: 1.03,
             2: 1.06,
@@ -41,7 +40,6 @@ class MinesGame {
         this.initializeEventListeners();
         this.updateBalanceDisplay();
 
-        // Add console command
         window.addmoney = (amount) => this.addMoney(amount);
     }
 
@@ -67,11 +65,9 @@ class MinesGame {
         document.querySelector('.half-btn').addEventListener('click', () => this.adjustBet(0.5));
         document.querySelector('.double-btn').addEventListener('click', () => this.adjustBet(2));
         
-        // Mode switching
         document.querySelector('[data-mode="auto"]').addEventListener('click', () => this.toggleAutoPanel(true));
         document.querySelector('[data-mode="manual"]').addEventListener('click', () => this.toggleAutoPanel(false));
         
-        // Auto play controls
         document.getElementById('startAutoPlay').addEventListener('click', () => this.startAutoPlay());
         document.getElementById('closeAutoPlay').addEventListener('click', () => this.toggleAutoPanel(false));
     }
@@ -93,7 +89,6 @@ class MinesGame {
         document.querySelector('[data-mode="auto"]').classList.toggle('active', show);
         document.querySelector('[data-mode="manual"]').classList.toggle('active', !show);
         
-        // Close panel when clicking overlay
         if (show) {
             this.autoOverlay.addEventListener('click', () => this.toggleAutoPanel(false), { once: true });
         }
@@ -118,7 +113,6 @@ class MinesGame {
             return;
         }
 
-        // Add validation for mine count
         if (this.mineCount < 1 || this.mineCount > 21) {
             this.showResult('Error', 'Invalid mine count', true);
             return;
@@ -135,7 +129,6 @@ class MinesGame {
         this.actionButton.textContent = 'Cash Out';
         this.actionButton.classList.add('cashout');
         
-        // Disable only specific sidebar elements
         this.betInput.disabled = true;
         this.minesSelect.disabled = true;
         document.querySelector('.half-btn').disabled = true;
@@ -159,7 +152,7 @@ class MinesGame {
         const cell = this.gameGrid.children[index];
         
         if (this.mines.includes(index)) {
-            this.gameActive = false; // Immediately set game as inactive
+            this.gameActive = false;
             cell.classList.add('mine');
             this.gameOver(false);
             return;
@@ -177,17 +170,14 @@ class MinesGame {
     }
 
     updateProfit() {
-        // Get multiplier from map or use default calculation for missing values
         let multiplier = this.multiplierMap[this.mineCount] || this.calculateMultiplier();
         this.currentProfit = this.betAmount * Math.pow(multiplier, this.revealed.size);
     }
 
-    // Add new method to calculate multiplier if not in map
     calculateMultiplier() {
-        // Fallback calculation for custom mine counts
         const safeSpots = this.totalTiles - this.mineCount;
         const baseMultiplier = this.totalTiles / safeSpots;
-        return 1 + (baseMultiplier - 1) * 0.95; // 95% of theoretical multiplier for balance
+        return 1 + (baseMultiplier - 1) * 0.95;
     }
 
     cashOut() {
@@ -202,7 +192,6 @@ class MinesGame {
     gameOver(won) {
         this.gameActive = false;
         
-        // Reveal all mines
         this.mines.forEach(index => {
             const cell = this.gameGrid.children[index];
             cell.classList.add('mine');
@@ -222,7 +211,6 @@ class MinesGame {
         this.actionButton.classList.remove('cashout');
         this.updateUI();
         
-        // Re-enable sidebar elements
         this.betInput.disabled = false;
         this.minesSelect.disabled = false;
         document.querySelector('.half-btn').disabled = false;
@@ -235,14 +223,11 @@ class MinesGame {
         overlay.querySelector('.result-text').textContent = text;
         const amountElement = overlay.querySelector('.result-amount');
         
-        // Remove +/- symbols and format amount
         const cleanAmount = amount.replace(/[+\-$]/g, '');
         amountElement.textContent = `$${cleanAmount}`;
         
-        // Disable action button while popup is showing
         this.actionButton.disabled = true;
         
-        // Add win/lose/error class for color
         amountElement.classList.remove('win', 'lose', 'error');
         if (isError) {
             amountElement.classList.add('error');
@@ -284,10 +269,6 @@ class MinesGame {
 
     updateMineCount() {
         this.mineCount = parseInt(this.minesSelect.value);
-    }
-
-    loadBalance() {
-        return parseFloat(localStorage.getItem('gameBalance'));
     }
 
     saveBalance() {
@@ -336,7 +317,6 @@ class MinesGame {
             const safeCells = [...Array(this.totalTiles).keys()]
                 .filter(i => !this.mines.includes(i));
             
-            // Auto reveal strategy
             for (let i = 0; i < Math.min(5, safeCells.length); i++) {
                 if (!this.gameActive) break;
                 
@@ -368,7 +348,6 @@ class MinesGame {
     }
 }
 
-// Initialize game when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     new MinesGame();
 });

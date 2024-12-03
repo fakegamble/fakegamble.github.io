@@ -52,7 +52,6 @@ body::before {
     min-height: 100vh;
 }
 
-/* Header Styles */
 .main-header {
     background: rgba(15, 23, 42, 0.8);
     padding: 1.5rem 0;
@@ -150,7 +149,6 @@ body::before {
     display: none;
 }
 
-/* Categories Styles */
 .categories-wrapper {
     display: flex;
     gap: 1rem;
@@ -197,7 +195,6 @@ body::before {
     transform: translateY(-2px);
 }
 
-/* Main Content Styles */
 .main-content {
     flex: 1;
     max-width: 1400px;
@@ -238,7 +235,7 @@ body::before {
 .game-preview {
     position: relative;
     width: 100%;
-    padding-top: 56.25%; /* 16:9 aspect ratio */
+    padding-top: 56.25%;
     overflow: hidden;
 }
 
@@ -314,7 +311,6 @@ body::before {
     color: var(--accent-color);
 }
 
-/* Add game card badge */
 .game-card::before {
     content: 'Popular';
     position: absolute;
@@ -338,7 +334,6 @@ body::before {
     transform: translateY(0);
 }
 
-/* Add shine effect on hover */
 .game-card::after {
     content: '';
     position: absolute;
@@ -360,7 +355,6 @@ body::before {
     left: 200%;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
     .games-container {
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -378,12 +372,10 @@ body::before {
     }
 }
 
-/* Add smooth scrolling to the page */
 html {
     scroll-behavior: smooth;
 }
 
-/* Welcome Message Styles */
 .welcome-message {
     text-align: center;
     margin-bottom: 2rem;
@@ -407,12 +399,10 @@ html {
     color: transparent;
 }
 
-/* Balance Animation */
 .balance-update {
     animation: pulse 0.5s ease-in-out;
 }
 
-/* Notification Styles */
 .notification {
     position: fixed;
     bottom: -100px;
@@ -443,7 +433,6 @@ html {
     background: var(--primary-color);
 }
 
-/* Animations */
 @keyframes slideDown {
     from {
         opacity: 0;
@@ -467,14 +456,12 @@ html {
     }
 }
 
-/* Disabled button styles */
 .add-funds:disabled {
     opacity: 0.7;
     cursor: not-allowed;
     transform: none;
 }
 
-/* Settings Button */
 .settings-btn {
     margin-left: auto;
     background: none;
@@ -491,7 +478,6 @@ html {
     transform: rotate(30deg);
 }
 
-/* Settings Modal */
 .settings-modal {
     display: none;
     position: fixed;
@@ -653,7 +639,6 @@ html {
     font-weight: 600;
 }
 
-/* Update responsive styles */
 @media (max-width: 768px) {
     .logo-section {
         gap: 0.25rem;
@@ -665,14 +650,12 @@ html {
     }
 }
 
-/* Add new animation keyframes */
 @keyframes shine {
     to {
         background-position: 200% center;
     }
 }
 
-/* Add floating animation to game cards */
 @keyframes float {
     0% {
         transform: translateY(0);
@@ -689,16 +672,12 @@ html {
     animation: float 6s ease-in-out infinite;
 }
 
-/* Add glow effect to active elements */
 .category.active,
 .add-funds:hover,
 .settings-btn:hover {
     box-shadow: 0 0 20px rgba(79, 70, 229, 0.4);
 }
 
-/* Mobile-friendly adjustments */
-
-/* Header responsive styling */
 @media (max-width: 768px) {
     .header-content {
         padding: 0 1rem;
@@ -722,11 +701,10 @@ html {
     }
 
     .balance-label {
-        display: none; /* Hide "Balance" text on mobile */
+        display: none;
     }
 }
 
-/* Categories responsive styling */
 @media (max-width: 768px) {
     .categories-wrapper {
         padding: 1rem;
@@ -744,7 +722,6 @@ html {
     }
 }
 
-/* Welcome message responsive styling */
 @media (max-width: 768px) {
     .welcome-message {
         margin: 1rem;
@@ -756,7 +733,6 @@ html {
     }
 }
 
-/* Games container responsive styling */
 @media (max-width: 768px) {
     .main-content {
         padding: 1rem;
@@ -786,7 +762,6 @@ html {
     }
 }
 
-/* Settings modal responsive styling */
 @media (max-width: 768px) {
     .settings-content {
         width: 95%;
@@ -802,7 +777,6 @@ html {
     }
 }
 
-/* Disable hover effects on mobile */
 @media (hover: none) {
     .game-card:hover {
         transform: none;
@@ -824,14 +798,12 @@ html {
     }
 }
 
-/* Base font size adjustments for better readability */
 @media (max-width: 375px) {
     html {
         font-size: 14px;
     }
 }
 
-/* Landscape mode adjustments */
 @media (max-height: 500px) and (orientation: landscape) {
     .header-content {
         padding: 0.5rem 1rem;
@@ -851,12 +823,11 @@ html {
     }
 }
 
-/* Touch-specific optimizations */
 @media (pointer: coarse) {
     .category,
     .add-funds,
     .settings-btn {
-        min-height: 44px; /* Minimum touch target size */
+        min-height: 44px;
     }
 
     .game-card {

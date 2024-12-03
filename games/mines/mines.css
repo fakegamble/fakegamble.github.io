@@ -41,7 +41,6 @@ body {
     border-radius: 12px;
 }
 
-/* Sidebar Styles */
 .sidebar {
     width: 280px;
     background: linear-gradient(180deg, var(--sidebar-color) 0%, #1a2c38 100%);
@@ -169,7 +168,6 @@ input[type="number"]:focus, select:focus {
     box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
 }
 
-/* Main Content Styles */
 .main-content {
     flex: 1;
     display: flex;
@@ -251,7 +249,6 @@ input[type="number"]:focus, select:focus {
     box-shadow: 0 0 20px rgba(255, 71, 87, 0.3);
 }
 
-/* Game Info Styles */
 .game-info {
     margin-top: 0;
     display: flex;
@@ -272,8 +269,6 @@ input[type="number"]:focus, select:focus {
 .tiles-label, .profit-label {
     color: var(--text-secondary);
 }
-
-/* Auto Panel Styles */
 .auto-panel {
     display: none;
     position: absolute;
@@ -329,7 +324,6 @@ input[type="number"]:focus, select:focus {
     color: var(--text-color);
 }
 
-/* Result Overlay */
 .result-overlay {
     display: none;
     position: fixed;
@@ -420,7 +414,6 @@ input[type="number"]:focus, select:focus {
     }
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
     .game-wrapper {
         flex-direction: column;
@@ -467,7 +460,6 @@ input[type="number"]:focus, select:focus {
     }
 }
 
-/* Add styles for disabled sidebar */
 .sidebar.disabled {
     opacity: 0.7;
     pointer-events: none;
@@ -477,7 +469,6 @@ input[type="number"]:focus, select:focus {
     pointer-events: none;
 }
 
-/* Add styles for disabled buttons */
 .modifier-btn:disabled,
 .mode-btn:disabled,
 input:disabled,
@@ -486,7 +477,6 @@ select:disabled {
     cursor: not-allowed;
 }
 
-/* Update existing styles */
 .cell {
     aspect-ratio: 1;
     background: rgba(255, 255, 255, 0.05);
@@ -507,14 +497,12 @@ select:disabled {
     pointer-events: none;
 }
 
-/* Add to your existing button styles */
 .action-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     pointer-events: none;
 }
 
-/* Add these new styles */
 .previous-games {
     margin-top: 1.5rem;
     padding-top: 1.5rem;
@@ -556,14 +544,12 @@ select:disabled {
     color: var(--danger-color);
 }
 
-/* Update sidebar-top to create more space */
 .sidebar-top {
     display: flex;
     flex-direction: column;
     height: 100%;
 }
 
-/* Update previous-games styles */
 .previous-games {
     margin-top: 1.5rem;
     padding-top: 1.5rem;
@@ -571,7 +557,6 @@ select:disabled {
     flex: 1;
 }
 
-/* Update game-info styles */
 .game-info {
     margin-top: 0;
     display: flex;
@@ -582,7 +567,6 @@ select:disabled {
     margin-bottom: 0;
 }
 
-/* Mines Select Dropdown Styling */
 select#minesCount {
     appearance: none;
     -webkit-appearance: none;
@@ -608,19 +592,16 @@ select#minesCount:focus {
     box-shadow: 0 0 0 1px var(--accent-color);
 }
 
-/* Hover effect for options */
 select#minesCount option:hover,
 select#minesCount option:focus {
     background-color: var(--accent-color);
 }
 
-/* For Firefox */
 select#minesCount {
     scrollbar-width: thin;
     scrollbar-color: var(--accent-color) var(--sidebar-color);
 }
 
-/* For Webkit browsers (Chrome, Safari) */
 select#minesCount::-webkit-scrollbar {
     width: 8px;
 }

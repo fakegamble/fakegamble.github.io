@@ -1,0 +1,173 @@
+@import url('../blackjack/blackjack.css');
+
+.dice-table {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 2rem;
+}
+
+.dice-container {
+    display: flex;
+    gap: 2rem;
+}
+
+.game-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.win-rate,
+.total-played {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.win-rate-label,
+.total-played-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.win-rate-value,
+.total-played-value {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.dice {
+    width: 100px;
+    height: 100px;
+    background: white;
+    border-radius: 12px;
+    display: grid;
+    grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+    padding: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+    position: relative;
+}
+
+.dice.rolling {
+    animation: diceRoll 0.6s ease-in-out;
+}
+
+@keyframes diceRoll {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.2); }
+    100% { transform: rotate(360deg) scale(1); }
+}
+
+.dot {
+    width: 16px;
+    height: 16px;
+    background: var(--background-color);
+    border-radius: 50%;
+    position: absolute;
+}
+
+.dot.center {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.dot.top-left {
+    top: 20%;
+    left: 20%;
+}
+
+.dot.top-right {
+    top: 20%;
+    right: 20%;
+}
+
+.dot.middle-left {
+    top: 50%;
+    left: 20%;
+    transform: translateY(-50%);
+}
+
+.dot.middle-right {
+    top: 50%;
+    right: 20%;
+    transform: translateY(-50%);
+}
+
+.dot.bottom-left {
+    bottom: 20%;
+    left: 20%;
+}
+
+.dot.bottom-right {
+    bottom: 20%;
+    right: 20%;
+}
+
+.roll-sum {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sum-label {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+}
+
+.sum-value {
+    font-size: 2.5rem;
+    font-weight: 600;
+}
+
+.target-control {
+    margin-top: 1rem;
+}
+
+.target-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.target-btn {
+    flex: 1;
+    padding: 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    background: var(--panel-color);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.target-btn.active {
+    background: var(--accent-color);
+    color: var(--background-color);
+    border-color: var(--accent-color);
+}
+
+@media (max-width: 768px) {
+    .dice {
+        width: 80px;
+        height: 80px;
+        padding: 8px;
+    }
+
+    .dot {
+        width: 12px;
+        height: 12px;
+    }
+
+    .dice-container {
+        gap: 1rem;
+    }
+}
