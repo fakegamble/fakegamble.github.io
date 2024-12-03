@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta property="og:title" content="Fake Gamble - Play Free Casino Games">
     <meta property="og:description" content="Play free casino games with virtual currency. No real money involved, just pure entertainment!">
-    <meta property="og:image" content="/assets/favicon.png">
+    <meta property="og:image" content="./assets/favicon.png">
     <meta property="og:url" content="https://fakegamble.github.io/">
     <meta property="og:type" content="website">
     <title>Fake Gamble | Home </title>
     <link rel="stylesheet" href="home-styles.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="./assets/favicon.ico">
 </head>
 <body>
     <div class="page-wrapper">
@@ -221,6 +221,84 @@
         </div>
     </div>
     <script src="home-script.js"></script>
-    <script src="scripts/viewer-tracker.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { 
+            getFirestore, 
+            doc, 
+            setDoc, 
+            getDoc,
+            onSnapshot 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const _0x3f8b2c = {
+            _k: 'QWlhU3lCV1N2Q1VnbGw4T2NvdWJDaTBHZUF2Vm5DV18zYkVzV3c=',
+            _d: 'dmlld3MtZDBiM2Iud2ViLmFwcA==',
+            _u: 'aHR0cHM6Ly92aWV3cy1kMGIzYi1kZWZhdWx0LXJ0ZGIuZmlyZWJhc2Vpby5jb20=',
+            _p: 'dmlld3MtZDBiM2I=',
+            _s: 'dmlld3MtZDBiM2IuZmlyZWJhc2VzdG9yYWdlLmFwcA==',
+            _m: 'Mjc4NTU0MTAwOTc=',
+            _a: 'MToyNzg1NTQxMDA5Nzp3ZWI6MDJlN2E0OWEwMWJlMTBkZGMzMjM5MA==',
+            _t: 'Ry01RFBEWllEUkZK'
+        };
+
+        const firebaseConfig = {
+            apiKey: atob(_0x3f8b2c._k),
+            authDomain: atob(_0x3f8b2c._d),
+            databaseURL: atob(_0x3f8b2c._u),
+            projectId: atob(_0x3f8b2c._p),
+            storageBucket: atob(_0x3f8b2c._s),
+            messagingSenderId: atob(_0x3f8b2c._m),
+            appId: atob(_0x3f8b2c._a),
+            measurementId: atob(_0x3f8b2c._t)
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Generate or get device ID
+        function getDeviceId() {
+            let deviceId = localStorage.getItem('deviceId');
+            if (!deviceId) {
+                deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('deviceId', deviceId);
+            }
+            return deviceId;
+        }
+
+        // Update balance function
+        async function updateBalance(newBalance) {
+            const deviceId = getDeviceId();
+            const playerRef = doc(db, "players", deviceId);
+            await setDoc(playerRef, { balance: newBalance }, { merge: true });
+            return newBalance;
+        }
+
+        // Initialize player function
+        async function initializePlayer() {
+            const deviceId = getDeviceId();
+            const playerRef = doc(db, "players", deviceId);
+            const playerDoc = await getDoc(playerRef);
+            
+            if (!playerDoc.exists()) {
+                await setDoc(playerRef, { balance: 100 }); // Default starting balance
+                window.playerBalance = 100;
+            } else {
+                window.playerBalance = playerDoc.data().balance;
+            }
+        }
+
+        // Make everything globally available
+        window.db = db;
+        window.doc = doc;
+        window.getDeviceId = getDeviceId;
+        window.updateBalance = updateBalance;
+        window.onSnapshot = onSnapshot;
+        window.initializePlayer = initializePlayer;
+
+        // Initialize player balance
+        await initializePlayer();
+    </script>
 </body>
 </html>

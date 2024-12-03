@@ -1,6 +1,6 @@
 class GameHub {
     constructor() {
-        this.balance = parseFloat(localStorage.getItem('gameBalance')) || 100.00;
+        this.balance = 0;
         this.lastAddMoney = parseInt(localStorage.getItem('lastAddMoney')) || 0;
         this.COOLDOWN_TIME = 5 * 60 * 1000;
         this.initializeUI();
@@ -12,6 +12,20 @@ class GameHub {
             this.startCooldownTimer();
         }
         this.initializeHeaderScroll();
+        
+        this.setupBalanceListener();
+    }
+
+    setupBalanceListener() {
+        const deviceId = window.getDeviceId();
+        const playerRef = doc(db, "players", deviceId);
+        
+        onSnapshot(playerRef, (doc) => {
+            if (doc.exists()) {
+                this.balance = doc.data().balance;
+                this.updateBalanceDisplay();
+            }
+        });
     }
 
     initializeUI() {
@@ -47,7 +61,6 @@ class GameHub {
     updateBalanceDisplay() {
         const balanceElement = document.querySelector('.balance-amount');
         balanceElement.textContent = `$${this.balance.toFixed(2)}`;
-        localStorage.setItem('gameBalance', this.balance.toFixed(2));
         
         balanceElement.classList.add('balance-update');
         setTimeout(() => balanceElement.classList.remove('balance-update'), 500);
@@ -64,7 +77,7 @@ class GameHub {
             addFundsBtn.innerHTML = `<span class="material-icons">hourglass_empty</span> ${minutes}:${seconds.toString().padStart(2, '0')}`;
         } else {
             addFundsBtn.disabled = false;
-            addFundsBtn.innerHTML = '<span class="material-icons">add_circle</span>';
+            addFundsBtn.innerHTML = '<span class="material-icons">add_circle</span> Get $1,000';
         }
     }
 
@@ -90,8 +103,9 @@ class GameHub {
         });
     }
 
-    addEventListeners() {
-        window.addmoney = (amount) => {
+    async addEventListeners() {
+        const addFundsBtn = document.querySelector('.add-funds');
+        addFundsBtn.addEventListener('click', async () => {
             const timeLeft = this.getTimeLeftOnCooldown();
             
             if (timeLeft > 0) {
@@ -100,16 +114,24 @@ class GameHub {
                 return;
             }
 
-            this.balance += amount;
-            this.lastAddMoney = Date.now();
-            localStorage.setItem('lastAddMoney', this.lastAddMoney);
+            const amount = 1000;
+            const deviceId = window.getDeviceId();
             
-            this.updateBalanceDisplay();
-            this.updateAddMoneyButton();
-            this.showNotification(`Successfully added $${amount.toFixed(2)}!`, 'success');
-            
-            this.startCooldownTimer();
-        };
+            try {
+                await window.updateBalance(this.balance + amount);
+                
+                this.lastAddMoney = Date.now();
+                localStorage.setItem('lastAddMoney', this.lastAddMoney);
+                
+                this.updateAddMoneyButton();
+                this.showNotification(`Successfully added $${amount.toFixed(2)}!`, 'success');
+                
+                this.startCooldownTimer();
+            } catch (error) {
+                console.error("Error adding money:", error);
+                this.showNotification("Failed to add money. Please try again.", 'error');
+            }
+        });
     }
 
     startCooldownTimer() {
@@ -265,7 +287,7 @@ class GameHub {
         let lastScroll = 0;
         let headerTimeout;
         const header = document.querySelector('.main-header');
-        const SCROLL_THRESHOLD = 50; // Minimum scroll before hiding/showing
+        const SCROLL_THRESHOLD = 50;
         
         window.addEventListener('scroll', () => {
             clearTimeout(headerTimeout);
