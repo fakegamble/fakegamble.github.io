@@ -93,35 +93,54 @@
             userTable.innerHTML = '';
             
             // Get all localStorage keys
+            let users = new Map(); // Use a Map to store unique users and their balances
+            
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 
-                // Look for any user IDs
-                if (key === 'userId') {
-                    const userId = localStorage.getItem(key);
-                    const gameBalance = parseFloat(localStorage.getItem('gameBalance') || 0);
-                    const sharedGameBalance = parseFloat(localStorage.getItem('sharedGameBalance') || 0);
+                // Check for game-specific balances and stats
+                if (key === 'gameBalance') {
+                    const balance = parseFloat(localStorage.getItem(key)) || 0;
+                    const userId = localStorage.getItem('userId') || 'Anonymous';
                     
-                    if (gameBalance > 0 || sharedGameBalance > 0) {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${userId}</td>
-                            <td>
-                                Game Balance: $${gameBalance.toFixed(2)}<br>
-                                Shared Balance: $${sharedGameBalance.toFixed(2)}
-                            </td>
-                            <td>
-                                <button class="action-btn" onclick="resetBalance('${userId}')">Reset Balance</button>
-                                <button class="action-btn" onclick="deleteUser('${userId}')">Delete User</button>
-                            </td>
-                        `;
-                        userTable.appendChild(row);
+                    if (!users.has(userId)) {
+                        users.set(userId, {
+                            gameBalance: balance,
+                            gamesPlayed: {
+                                mines: parseInt(localStorage.getItem('minesGameState')?.gamesPlayed) || 0,
+                                blackjack: parseInt(localStorage.getItem('blackjack_gamesPlayed')) || 0,
+                                baccarat: parseInt(localStorage.getItem('baccarat_gamesPlayed')) || 0,
+                                coinflip: parseInt(localStorage.getItem('coinflip_gamesPlayed')) || 0,
+                                diceroll: parseInt(localStorage.getItem('diceroll_gamesPlayed')) || 0,
+                                highcard: parseInt(localStorage.getItem('highcard_gamesPlayed')) || 0,
+                                keno: parseInt(localStorage.getItem('keno_gamesPlayed')) || 0
+                            }
+                        });
                     }
                 }
             }
+
+            // Display users
+            for (let [userId, data] of users) {
+                const totalGamesPlayed = Object.values(data.gamesPlayed).reduce((a, b) => a + b, 0);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${userId}</td>
+                    <td>
+                        Balance: $${data.gameBalance.toFixed(2)}<br>
+                        Total Games: ${totalGamesPlayed}
+                    </td>
+                    <td>
+                        <button class="action-btn" onclick="resetBalance('${userId}')">Reset Balance</button>
+                        <button class="action-btn" onclick="deleteUser('${userId}')">Delete User</button>
+                    </td>
+                `;
+                userTable.appendChild(row);
+            }
             
             // If no users found
-            if (userTable.innerHTML === '') {
+            if (users.size === 0) {
                 userTable.innerHTML = `
                     <tr>
                         <td colspan="3" style="text-align: center;">No balances found.</td>
@@ -133,16 +152,20 @@
         function resetBalance(userId) {
             if (confirm(`Reset balance for user ${userId}?`)) {
                 localStorage.setItem('gameBalance', '0');
-                localStorage.setItem('sharedGameBalance', '0');
+                // Reset all game-specific balances
+                const games = ['mines', 'blackjack', 'baccarat', 'coinflip', 'diceroll', 'highcard', 'keno'];
+                games.forEach(game => {
+                    localStorage.removeItem(`${game}_gamesPlayed`);
+                    localStorage.removeItem(`${game}_gamesWon`);
+                });
                 loadUsers();
             }
         }
 
         function deleteUser(userId) {
             if (confirm(`Delete user ${userId}?`)) {
-                localStorage.removeItem('gameBalance');
-                localStorage.removeItem('sharedGameBalance');
-                localStorage.removeItem('userId');
+                // Clear all game-related data
+                localStorage.clear();
                 loadUsers();
             }
         }
