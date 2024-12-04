@@ -68,13 +68,13 @@ class CoinFlipGame {
             button.classList.toggle('active', button.dataset.choice === choice);
         });
     }
-
     async flip() {
-        if (this.gameActive || !this.selectedChoice) return;
-        if (this.betAmount <= 0 || this.betAmount > this.balance) {
-            this.showResult('Error', 'Invalid bet amount', true);
+        if (this.gameActive) return;
+        if (!this.selectedChoice) {
+            this.showResult('Error', 'Please select a side: Heads or Tails.', true); // Use showResult to display error
             return;
         }
+// ... existing code ...
 
         this.gameActive = true;
         this.balance -= this.betAmount;
@@ -88,7 +88,6 @@ class CoinFlipGame {
         this.coin.style.transform = `rotateY(${rotations * 180}deg)`;
         
         await new Promise(resolve => setTimeout(resolve, 2000));
-
         const won = result === this.selectedChoice;
         
         if (won) {
@@ -97,7 +96,7 @@ class CoinFlipGame {
             const multiplier = this.getMultiplier();
             const winAmount = this.betAmount * multiplier;
             this.balance += winAmount;
-            this.showResult('Win!', `+$${(winAmount - this.betAmount).toFixed(2)}`);
+            this.showResult('Win!', `$${winAmount.toFixed(2)}`);
         } else {
             this.currentStreak = 0;
             this.showResult('Loss', `-$${this.betAmount.toFixed(2)}`);

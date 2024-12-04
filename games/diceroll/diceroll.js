@@ -132,13 +132,14 @@ class DiceRollGame {
 
     async playRound() {
         if (this.gameActive) return;
-        if (this.betAmount <= 0 || this.betAmount > this.balance) {
+        if (this.betAmount <= 0 || this.betAmount > window.playerBalance) {
             this.showResult('Error', 'Invalid bet amount', true);
             return;
         }
 
         this.gameActive = true;
-        this.balance -= this.betAmount;
+        window.playerBalance -= this.betAmount;
+        await window.updateBalance(window.playerBalance);
         this.updateBalanceDisplay();
         this.actionButton.disabled = true;
 
@@ -175,20 +176,20 @@ class DiceRollGame {
         if (isUnderWin || isOverWin) {
             this.gamesWon++;
             const winAmount = this.betAmount * 2;
-            this.balance += winAmount;
-            this.showResult('Win!', `+$${(winAmount - this.betAmount).toFixed(2)}`);
+            window.playerBalance += winAmount;
+            await window.updateBalance(window.playerBalance);
+            this.showResult('Win!', `$${winAmount.toFixed(2)}`);
         } else if (sum === this.targetNumber) {
-            this.balance += this.betAmount;
+            window.playerBalance += this.betAmount;
+            await window.updateBalance(window.playerBalance);
             this.showResult('Push', 'Bet returned');
-            // Don't count pushes in games played
             this.gamesPlayed--;
         } else {
             this.showResult('Loss', `-$${this.betAmount.toFixed(2)}`);
         }
 
         this.gamesPlayed++;
-        this.updateStats(); // Update and save stats after each game
-        this.saveBalance();
+        this.updateStats();
         this.updateBalanceDisplay();
         
         this.gameActive = false;

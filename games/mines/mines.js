@@ -159,7 +159,12 @@ class MinesGame {
     }
 
     handleCellClick(index) {
-        if (!this.gameActive || this.revealed.has(index)) return;
+        if (!this.gameActive) {
+            this.showResult('Game Not Started', 'Press Play to start the game', true);
+            return;
+        }
+
+        if (this.revealed.has(index)) return;
 
         const cell = this.gameGrid.children[index];
         
@@ -197,6 +202,13 @@ class MinesGame {
         
         window.playerBalance += this.currentProfit;
         await updateBalance(window.playerBalance);
+        
+        // Show all mines before ending the game
+        this.mines.forEach(index => {
+            const cell = this.gameGrid.children[index];
+            cell.classList.add('mine');
+        });
+        
         this.showResult('Success!', `+$${this.currentProfit.toFixed(2)}`);
         this.endGame();
     }
@@ -267,7 +279,9 @@ class MinesGame {
     }
 
     updateBalanceDisplay() {
-        document.querySelector('.balance-amount').textContent = `$${window.playerBalance.toFixed(2)}`;
+        // Add default value of 0 if playerBalance is undefined
+        const balance = window.playerBalance || 0;
+        document.querySelector('.balance-amount').textContent = `$${balance.toFixed(2)}`;
     }
 
     adjustBet(multiplier) {
@@ -320,23 +334,38 @@ class MinesGame {
 
     async playAutoGame() {
         return new Promise(async (resolve) => {
-            this.startGame();
+            await new Promise(resolve => {
+                const checkOverlay = () => {
+                    if (!this.resultOverlay.classList.contains('active')) {
+                        resolve();
+                    } else {
+                        setTimeout(checkOverlay, 100);
+                    }
+                };
+                checkOverlay();
+            });
+
+            await this.startGame();
             
-            const safeCells = [...Array(this.totalTiles).keys()]
-                .filter(i => !this.mines.includes(i));
+            const maxClicks = 5;
+            let clicks = 0;
             
-            for (let i = 0; i < Math.min(5, safeCells.length); i++) {
-                if (!this.gameActive) break;
+            while (this.gameActive && clicks < maxClicks) {
+                const unrevealedPositions = Array.from(Array(this.totalTiles).keys())
+                    .filter(pos => !this.revealed.has(pos));
                 
-                const randomIndex = Math.floor(Math.random() * safeCells.length);
-                const cellToReveal = safeCells.splice(randomIndex, 1)[0];
+                if (unrevealedPositions.length === 0) break;
+                
+                const randomIndex = Math.floor(Math.random() * unrevealedPositions.length);
+                const selectedPosition = unrevealedPositions[randomIndex];
                 
                 await new Promise(resolve => setTimeout(resolve, 200));
-                this.handleCellClick(cellToReveal);
+                this.handleCellClick(selectedPosition);
+                clicks++;
             }
 
             if (this.gameActive) {
-                this.cashOut();
+                await this.cashOut();
             }
             
             resolve();

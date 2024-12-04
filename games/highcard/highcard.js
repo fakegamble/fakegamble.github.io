@@ -114,7 +114,7 @@ class HighCardGame {
             const winAmount = this.betAmount * 2;
             window.playerBalance += winAmount;
             await window.updateBalance(window.playerBalance);
-            this.showResult('Win!', `+$${(winAmount - this.betAmount).toFixed(2)}`);
+            this.showResult('Win!', `$${winAmount.toFixed(2)}`);
         } else if (playerValue === dealerValue) {
             window.playerBalance += this.betAmount;
             await window.updateBalance(window.playerBalance);
@@ -125,7 +125,6 @@ class HighCardGame {
 
         this.gamesPlayed++;
         this.updateStats();
-        this.saveBalance();
         this.updateBalanceDisplay();
         
         this.gameActive = false;
