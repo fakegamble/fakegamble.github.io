@@ -2,9 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Management Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta property="og:title" content="Fake Gamble - Admin panel">
+    <meta property="og:description" content="This page isnt meant for you so leave">
+    <meta property="og:image" content="/assets/favicon.png">
+    <meta property="og:url" content="https://fakegamble.github.io/">
+    <meta property="og:type" content="website">
+    <title>Fake Gamble | Admin </title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f172a">
     <style>
         :root {
             --background: #0f172a;
@@ -350,34 +360,39 @@
 }
 
 @media (max-width: 768px) {
-    .container {
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    .toolbar {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .sort-select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--border-radius);
+        background: rgba(15, 23, 42, 0.6);
+    }
+
+    .card {
         padding: 1rem;
     }
 
     .account-info {
         grid-template-columns: 1fr;
-        gap: 1rem;
     }
 
     .input-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.5rem;
     }
 
-    input[type="number"],
-    input[type="text"] {
-        width: calc(100% - 2rem);
-        max-width: 200px;
-    }
-
-    .header h1 {
-        font-size: 1rem;
-        margin: 0 0 0 1rem;
-    }
-
-    .btn-danger {
-        margin-right: 1rem;
+    .input-group input {
+        width: 100%;
     }
 }
     </style>
@@ -564,19 +579,13 @@
                     playerCard.innerHTML = `
                         <div class="account-info">
                             <div class="account-details">
-                                <h3>Device ID: ${doc.id} 
-                                    <span class="player-nickname">${player.nickname || ''}</span>
-                                </h3>
-                                <div class="balance">Current Balance: $${(player.balance || 0).toFixed(2)}</div>
+                                <h3>Device ID: ${doc.id}</h3>
+                                <div class="balance">Current Balance: $${player.balance || 0}</div>
                             </div>
                             <div class="input-group">
-                                <input type="text" class="nickname-input" placeholder="Set nickname" value="${player.nickname || ''}">
-                                <input type="number" value="${(player.balance || 0).toFixed(2)}" step="0.01">
-                                <button class="btn" onclick="updatePlayerBalance('${doc.id}', this)">
-                                    Update
-                                </button>
-                                <button class="btn btn-remove" onclick="removePlayer('${doc.id}')">
-                                    Remove
+                                <input type="number" value="${player.balance || 0}">
+                                <button class="btn" onclick="updatePlayerBalance('${doc.id}', this.previousElementSibling.value)">
+                                    Update Balance
                                 </button>
                             </div>
                         </div>
@@ -586,16 +595,17 @@
             });
         }
 
-        window.listenForBalanceUpdates = function() {
+        function listenForBalanceUpdates() {
             const playersRef = collection(db, "players");
             onSnapshot(playersRef, (snapshot) => {
+                // Update individual player cards
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === "modified") {
                         const player = change.doc.data();
                         const playerCard = document.getElementById(`player-${change.doc.id}`);
                         if (playerCard) {
                             const balanceElement = playerCard.querySelector('.balance');
-                            balanceElement.textContent = `Current Balance: $${(player.balance || 0).toFixed(2)}`;
+                            balanceElement.textContent = `Current Balance: $${player.balance || 0}`;
                         }
                     }
                 });
@@ -612,36 +622,29 @@
 
                 const avgBalance = playerCount > 0 ? totalBalance / playerCount : 0;
 
-                // Update statistics display with fixed decimals
+                // Update statistics display
                 document.getElementById('totalPlayers').textContent = playerCount;
-                document.getElementById('totalBalance').textContent = `$${totalBalance.toFixed(2)}`;
-                document.getElementById('avgBalance').textContent = `$${avgBalance.toFixed(2)}`;
+                document.getElementById('totalBalance').textContent = `$${totalBalance.toLocaleString()}`;
+                document.getElementById('avgBalance').textContent = `$${avgBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
             });
         }
 
-        window.updatePlayerBalance = async function(deviceId, button) {
+        window.updatePlayerBalance = async function(deviceId, newBalance) {
             try {
-                const card = button.closest('.account-info');
-                const balanceInput = card.querySelector('input[type="number"]');
-                const nicknameInput = card.querySelector('.nickname-input');
-                
-                const balanceNum = parseFloat(balanceInput.value);
-                const nickname = nicknameInput.value.trim();
-                
+                const balanceNum = parseInt(newBalance);
                 if (isNaN(balanceNum)) {
                     alert('Please enter a valid number');
                     return;
                 }
                 
                 await setDoc(doc(db, "players", deviceId), {
-                    balance: balanceNum,
-                    nickname: nickname
+                    balance: balanceNum
                 }, { merge: true });
                 
-                console.log(`Updated device ${deviceId}`);
+                console.log(`Balance updated for device ${deviceId}`);
             } catch (error) {
-                console.error("Error updating:", error);
-                alert("Error updating: " + error.message);
+                console.error("Error updating balance:", error);
+                alert("Error updating balance: " + error.message);
             }
         }
 
