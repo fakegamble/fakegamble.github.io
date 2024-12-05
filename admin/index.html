@@ -396,7 +396,6 @@
     }
 }
     </style>
-    <script type="module" src="/js/playerTracker.js"></script>
 </head>
 <body>
     <div class="login-overlay" id="loginOverlay">
@@ -421,16 +420,16 @@
                 <div class="value" id="totalPlayers">-</div>
             </div>
             <div class="stat-card">
-                <h3>Live Players</h3>
-                <div class="value" id="livePlayers">-</div>
-            </div>
-            <div class="stat-card">
                 <h3>Total Balance</h3>
                 <div class="value" id="totalBalance">$0</div>
             </div>
             <div class="stat-card">
                 <h3>Average Balance</h3>
                 <div class="value" id="avgBalance">$0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Players Online</h3>
+                <div class="value" id="onlinePlayers">0</div>
             </div>
         </div>
 
@@ -457,7 +456,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, doc, setDoc, onSnapshot, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, get, onValue, onDisconnect, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBWSvCUgql8OcoubCi0GeAvVnCW_3bEsWw",
@@ -473,6 +472,35 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const database = getDatabase(app);
+
+        // Define deviceId based on your application's logic
+        const deviceId = 'someUniqueIdentifier'; // Replace with actual logic to get the device ID
+
+        // Reference to the online players node
+        const onlineRef = ref(database, 'online');
+
+        // Listen for changes to the online players node
+        onValue(onlineRef, (snapshot) => {
+            const onlinePlayers = snapshot.val() || {};
+            // Count the number of players marked as online
+            const count = Object.keys(onlinePlayers).filter(key => onlinePlayers[key].online).length;
+            // Update the UI with the current count
+            document.getElementById('onlinePlayers').textContent = count;
+        });
+
+        // When a player connects
+        onValue(ref(database, '.info/connected'), (snapshot) => {
+            if (snapshot.val() === true) {
+                const playerRef = ref(database, `online/${deviceId}`);
+                // Remove the status when the client disconnects
+                onDisconnect(playerRef).remove();
+                // Set the status to online
+                set(playerRef, {
+                    online: true,
+                    lastSeen: serverTimestamp()
+                });
+            }
+        });
 
         if (sessionStorage.getItem('adminBanned')) {
             fetch('https://api.ipify.org?format=json')
@@ -602,23 +630,33 @@
 
         function listenForBalanceUpdates() {
             const playersRef = collection(db, "players");
-            const activePlayersRef = ref(database, 'activePlayers');
-            
-            // Listen for active players count
-            onValue(activePlayersRef, (snapshot) => {
-                const activeCount = snapshot.val() || 0;
-                document.getElementById('livePlayers').textContent = activeCount;
-            });
-
-            // Rest of the existing balance monitoring code
             onSnapshot(playersRef, (snapshot) => {
+                // Update individual player cards
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "modified") {
+                        const player = change.doc.data();
+                        const playerCard = document.getElementById(`player-${change.doc.id}`);
+                        if (playerCard) {
+                            const balanceElement = playerCard.querySelector('.balance');
+                            balanceElement.textContent = `Current Balance: $${player.balance || 0}`;
+                        }
+                    }
+                });
+
+                // Update statistics
                 let totalBalance = 0;
+                let playerCount = 0;
+
                 snapshot.forEach((doc) => {
                     const player = doc.data();
                     totalBalance += player.balance || 0;
+                    playerCount++;
                 });
 
-                const avgBalance = snapshot.size > 0 ? totalBalance / snapshot.size : 0;
+                const avgBalance = playerCount > 0 ? totalBalance / playerCount : 0;
+
+                // Update statistics display
+                document.getElementById('totalPlayers').textContent = playerCount;
                 document.getElementById('totalBalance').textContent = `$${totalBalance.toLocaleString()}`;
                 document.getElementById('avgBalance').textContent = `$${avgBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
             });
@@ -715,6 +753,5 @@
         initializePlayersList();
         listenForBalanceUpdates();
     </script>
-    <script type="module" src="/js/playerTracker.js"></script>
 </body>
 </html>
