@@ -473,28 +473,24 @@
         const db = getFirestore(app);
         const database = getDatabase(app);
 
-        // Define deviceId based on your application's logic
-        const deviceId = 'someUniqueIdentifier'; // Replace with actual logic to get the device ID
-
-        // Reference to the online players node
+        const deviceId = localStorage.getItem('deviceId');
+        const playerRef = ref(database, `online/${deviceId}`);
         const onlineRef = ref(database, 'online');
 
-        // Listen for changes to the online players node
         onValue(onlineRef, (snapshot) => {
             const onlinePlayers = snapshot.val() || {};
-            // Count the number of players marked as online
-            const count = Object.keys(onlinePlayers).filter(key => onlinePlayers[key].online).length;
-            // Update the UI with the current count
-            document.getElementById('onlinePlayers').textContent = count;
+            const uniqueDevices = new Set();
+            Object.entries(onlinePlayers).forEach(([id, status]) => {
+                if (status.online) {
+                    uniqueDevices.add(id);
+                }
+            });
+            document.getElementById('onlinePlayers').textContent = uniqueDevices.size;
         });
 
-        // When a player connects
         onValue(ref(database, '.info/connected'), (snapshot) => {
-            if (snapshot.val() === true) {
-                const playerRef = ref(database, `online/${deviceId}`);
-                // Remove the status when the client disconnects
+            if (snapshot.val() === true && deviceId) {
                 onDisconnect(playerRef).remove();
-                // Set the status to online
                 set(playerRef, {
                     online: true,
                     lastSeen: serverTimestamp()

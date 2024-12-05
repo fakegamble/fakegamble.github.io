@@ -233,6 +233,7 @@
             getDoc,
             onSnapshot 
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getDatabase, ref, onValue, onDisconnect, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const _0x3f8b2c = {
             _k: 'QWlhU3lCV1N2Q1VnbGw4T2NvdWJDaTBHZUF2Vm5DV18zYkVzV3c=',
@@ -259,6 +260,7 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const database = getDatabase(app);
 
         // Generate or get device ID
         function getDeviceId() {
@@ -302,6 +304,32 @@
 
         // Initialize player balance
         await initializePlayer();
+
+        // Online presence tracking
+        const deviceId = getDeviceId();
+        const playerRef = ref(database, `online/${deviceId}`);
+        const onlineRef = ref(database, 'online');
+
+        onValue(onlineRef, (snapshot) => {
+            const onlinePlayers = snapshot.val() || {};
+            const uniqueDevices = new Set();
+            Object.entries(onlinePlayers).forEach(([id, status]) => {
+                if (status.online) {
+                    uniqueDevices.add(id);
+                }
+            });
+            document.getElementById('onlinePlayers').textContent = uniqueDevices.size;
+        });
+
+        onValue(ref(database, '.info/connected'), (snapshot) => {
+            if (snapshot.val() === true && deviceId) {
+                onDisconnect(playerRef).remove();
+                set(playerRef, {
+                    online: true,
+                    lastSeen: serverTimestamp()
+                });
+            }
+        });
     </script>
 </body>
 </html>
