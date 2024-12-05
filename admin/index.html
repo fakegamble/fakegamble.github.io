@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta property="og:title" content="Fake Gamble - Admin panel">
+    <meta property="og:title" content="Fake Gamble | Admin panel">
     <meta property="og:description" content="This page isnt meant for you so leave">
     <meta property="og:image" content="/assets/favicon.png">
     <meta property="og:url" content="https://fakegamble.github.io/">
@@ -188,7 +188,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 100vh;
+            height: 100%;
             background: var(--gradient-background);
             display: flex;
             align-items: center;
@@ -395,15 +395,8 @@
         width: 100%;
     }
 }
-
-.hidden-until-auth {
-    display: none;
-}
-
-body.authenticated .hidden-until-auth {
-    display: block;
-}
     </style>
+    <script type="module" src="/js/playerTracker.js"></script>
 </head>
 <body>
     <div class="login-overlay" id="loginOverlay">
@@ -416,16 +409,20 @@ body.authenticated .hidden-until-auth {
         </div>
     </div>
 
-    <header class="header hidden-until-auth">
+    <header class="header">
         <h1>Account Management Dashboard</h1>
         <button class="btn btn-danger" onclick="resetAllPlayers()">Reset All Players</button>
     </header>
 
-    <main class="container hidden-until-auth">
+    <main class="container">
         <div class="stats">
             <div class="stat-card">
                 <h3>Total Players</h3>
                 <div class="value" id="totalPlayers">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Live Players</h3>
+                <div class="value" id="livePlayers">-</div>
             </div>
             <div class="stat-card">
                 <h3>Total Balance</h3>
@@ -460,7 +457,7 @@ body.authenticated .hidden-until-auth {
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, doc, setDoc, onSnapshot, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBWSvCUgql8OcoubCi0GeAvVnCW_3bEsWw",
@@ -506,7 +503,6 @@ body.authenticated .hidden-until-auth {
                 
                 if (whitelistedIP === currentIP) {
                     document.getElementById('loginOverlay').style.display = 'none';
-                    document.body.classList.add('authenticated');
                     sessionStorage.setItem('adminAuth', btoa(Date.now()));
                     return false;
                 }
@@ -520,7 +516,6 @@ body.authenticated .hidden-until-auth {
                 
                 if (isValid) {
                     document.getElementById('loginOverlay').style.display = 'none';
-                    document.body.classList.add('authenticated');
                     sessionStorage.setItem('adminAuth', btoa(Date.now()));
                     sessionStorage.removeItem('failedAttempts');
                 } else {
@@ -557,7 +552,6 @@ body.authenticated .hidden-until-auth {
                     
                     if (whitelistedIP === currentIP) {
                         document.getElementById('loginOverlay').style.display = 'none';
-                        document.body.classList.add('authenticated');
                         sessionStorage.setItem('adminAuth', btoa(Date.now()));
                     } else {
                         document.getElementById('loginOverlay').style.display = 'flex';
@@ -568,7 +562,6 @@ body.authenticated .hidden-until-auth {
                 }
             } else {
                 document.getElementById('loginOverlay').style.display = 'none';
-                document.body.classList.add('authenticated');
             }
         }
 
@@ -609,33 +602,23 @@ body.authenticated .hidden-until-auth {
 
         function listenForBalanceUpdates() {
             const playersRef = collection(db, "players");
+            const activePlayersRef = ref(database, 'activePlayers');
+            
+            // Listen for active players count
+            onValue(activePlayersRef, (snapshot) => {
+                const activeCount = snapshot.val() || 0;
+                document.getElementById('livePlayers').textContent = activeCount;
+            });
+
+            // Rest of the existing balance monitoring code
             onSnapshot(playersRef, (snapshot) => {
-                // Update individual player cards
-                snapshot.docChanges().forEach((change) => {
-                    if (change.type === "modified") {
-                        const player = change.doc.data();
-                        const playerCard = document.getElementById(`player-${change.doc.id}`);
-                        if (playerCard) {
-                            const balanceElement = playerCard.querySelector('.balance');
-                            balanceElement.textContent = `Current Balance: $${player.balance || 0}`;
-                        }
-                    }
-                });
-
-                // Update statistics
                 let totalBalance = 0;
-                let playerCount = 0;
-
                 snapshot.forEach((doc) => {
                     const player = doc.data();
                     totalBalance += player.balance || 0;
-                    playerCount++;
                 });
 
-                const avgBalance = playerCount > 0 ? totalBalance / playerCount : 0;
-
-                // Update statistics display
-                document.getElementById('totalPlayers').textContent = playerCount;
+                const avgBalance = snapshot.size > 0 ? totalBalance / snapshot.size : 0;
                 document.getElementById('totalBalance').textContent = `$${totalBalance.toLocaleString()}`;
                 document.getElementById('avgBalance').textContent = `$${avgBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
             });
@@ -732,5 +715,6 @@ body.authenticated .hidden-until-auth {
         initializePlayersList();
         listenForBalanceUpdates();
     </script>
+    <script type="module" src="/js/playerTracker.js"></script>
 </body>
 </html>

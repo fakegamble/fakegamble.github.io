@@ -12,11 +12,11 @@ class KenoGame {
         
         this.payoutTable = {
             0: 0,
-            1: 1,
-            2: 2,
-            3: 5,
-            4: 20,
-            5: 100
+            1: 0.5,  // Lowered from 1
+            2: 1,    // Lowered from 2
+            3: 2,    // Lowered from 5
+            4: 5,    // Lowered from 20
+            5: 20    // Lowered from 100
         };
 
         if (typeof window.playerBalance === 'undefined') {
@@ -107,12 +107,16 @@ class KenoGame {
         await this.saveBalance();
         this.updateBalanceDisplay();
 
-        // Draw 10 numbers (changed from 20 to 10 for 40-number board)
+        // Enhanced randomness using Fisher-Yates shuffle
         const numbers = Array.from({length: this.totalNumbers}, (_, i) => i + 1);
+        for (let i = numbers.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+        }
+
         for (let i = 0; i < 10; i++) {
             await new Promise(resolve => setTimeout(resolve, 100));
-            const randomIndex = Math.floor(Math.random() * numbers.length);
-            const drawnNumber = numbers.splice(randomIndex, 1)[0];
+            const drawnNumber = numbers[i];
             this.drawnNumbers.add(drawnNumber);
             this.showDrawnNumber(drawnNumber);
         }

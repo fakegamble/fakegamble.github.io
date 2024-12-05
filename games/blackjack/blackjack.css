@@ -424,6 +424,34 @@ input:disabled {
     gap: 0.5rem;
 }
 
+.game-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.win-rate,
+.total-played {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.win-rate-label,
+.total-played-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.win-rate-value,
+.total-played-value {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
 @media (max-width: 768px) {
     .action-btn {
         padding: 1rem;

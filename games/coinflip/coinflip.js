@@ -71,15 +71,16 @@ class CoinFlipGame {
     async flip() {
         if (this.gameActive) return;
         if (!this.selectedChoice) {
-            this.showResult('Error', 'Please select a side: Heads or Tails.', true); // Use showResult to display error
+            this.showResult('Error', 'Please select a side: Heads or Tails.', true);
             return;
         }
-// ... existing code ...
+        if (this.betAmount > window.playerBalance) {
+            this.showResult('Error', 'Insufficient balance', true);
+            return;
+        }
 
         this.gameActive = true;
-        this.balance -= this.betAmount;
-        this.saveBalance();
-        this.updateBalanceDisplay();
+        await window.updateBalance(window.playerBalance - this.betAmount);
         this.actionButton.disabled = true;
 
         const result = Math.random() < 0.5 ? 'heads' : 'tails';
@@ -95,7 +96,7 @@ class CoinFlipGame {
             this.currentStreak++;
             const multiplier = this.getMultiplier();
             const winAmount = this.betAmount * multiplier;
-            this.balance += winAmount;
+            await window.updateBalance(window.playerBalance + winAmount);
             this.showResult('Win!', `$${winAmount.toFixed(2)}`);
         } else {
             this.currentStreak = 0;
@@ -104,8 +105,6 @@ class CoinFlipGame {
 
         this.gamesPlayed++;
         this.updateStats();
-        this.saveBalance();
-        this.updateBalanceDisplay();
         
         this.gameActive = false;
         this.actionButton.disabled = false;
@@ -156,10 +155,6 @@ class CoinFlipGame {
 
     updateBetAmount() {
         this.betAmount = parseFloat(this.betInput.value) || 0;
-    }
-
-    saveBalance() {
-        localStorage.setItem('gameBalance', this.balance.toFixed(2));
     }
 }
 

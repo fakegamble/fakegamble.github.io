@@ -6,6 +6,10 @@ class BlackjackGame {
         this.gameActive = false;
         this.betAmount = 1.00;
         
+        // Initialize games played and won from localStorage
+        this.gamesPlayed = parseInt(localStorage.getItem('blackjack_gamesPlayed')) || 0;
+        this.gamesWon = parseInt(localStorage.getItem('blackjack_gamesWon')) || 0;
+        
         if (typeof window.playerBalance === 'undefined') {
             window.addEventListener('balanceInitialized', () => {
                 this.initialize();
@@ -20,6 +24,7 @@ class BlackjackGame {
         this.initializeEventListeners();
         this.setupBalanceListener();
         this.updateBalanceDisplay();
+        this.updateStats(); // Update stats display on initialization
     }
 
     setupBalanceListener() {
@@ -166,6 +171,7 @@ class BlackjackGame {
 
     async endGame(result) {
         this.gameActive = false;
+        this.gamesPlayed++;
         
         const dealerCards = this.dealerCards.querySelectorAll('.card');
         if (dealerCards[1]) {
@@ -212,6 +218,12 @@ class BlackjackGame {
         
         document.body.appendChild(overlay);
         setTimeout(() => overlay.remove(), 2000);
+
+        if (result === 'win' || result === 'blackjack') {
+            this.gamesWon++;
+        }
+
+        this.updateStats(); // Update stats after each game
     }
 
     hit() {
@@ -327,6 +339,16 @@ class BlackjackGame {
 
     updateBetAmount() {
         this.betAmount = parseFloat(this.betInput.value) || 0;
+    }
+
+    updateStats() {
+        const winRate = this.gamesPlayed > 0 ? (this.gamesWon / this.gamesPlayed * 100).toFixed(1) : '0.0';
+        document.querySelector('.win-rate-value').textContent = `${winRate}%`;
+        document.querySelector('.total-played-value').textContent = this.gamesPlayed;
+
+        // Save stats to localStorage
+        localStorage.setItem('blackjack_gamesPlayed', this.gamesPlayed);
+        localStorage.setItem('blackjack_gamesWon', this.gamesWon);
     }
 }
 
