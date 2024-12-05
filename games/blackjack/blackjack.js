@@ -45,12 +45,15 @@ class BlackjackGame {
     }
 
     updateBalanceDisplay() {
-        if (typeof window.playerBalance !== 'undefined') {
-            const balanceElements = document.querySelectorAll('.balance-amount');
-            balanceElements.forEach(element => {
-                element.textContent = `$${window.playerBalance.toFixed(2)}`;
-            });
-        }
+        const balance = window.playerBalance || 0;
+        const formattedBalance = balance.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        const balanceElements = document.querySelectorAll('.balance-amount');
+        balanceElements.forEach(element => {
+            element.textContent = `$${formattedBalance}`;
+        });
     }
 
     initializeDOM() {

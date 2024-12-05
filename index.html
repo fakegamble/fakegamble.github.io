@@ -27,9 +27,13 @@
                     </a>
                 </div>
                 <div class="header-right">
+                    <div class="online-counter">
+                        <span class="material-icons">group</span>
+                        <span id="onlinePlayers">0</span> online
+                    </div>
                     <div class="balance-display">
                         <span class="balance-label">Balance</span>
-                        <span class="balance-amount">$0.00</span>
+                        <span class="balance-amount" id="balanceDisplay">$0.00</span>
                         <button class="add-funds">
                         </button>
                     </div>
@@ -262,6 +266,10 @@
         const db = getFirestore(app);
         const database = getDatabase(app);
 
+        function formatLargeNumber(num) {
+            return `$${num.toFixed(2)}`;
+        }
+
         // Generate or get device ID
         function getDeviceId() {
             let deviceId = localStorage.getItem('deviceId');
@@ -287,11 +295,12 @@
             const playerDoc = await getDoc(playerRef);
             
             if (!playerDoc.exists()) {
-                await setDoc(playerRef, { balance: 100 }); // Default starting balance
+                await setDoc(playerRef, { balance: 100 });
                 window.playerBalance = 100;
             } else {
                 window.playerBalance = playerDoc.data().balance;
             }
+            document.querySelector('.balance-amount').textContent = formatLargeNumber(window.playerBalance);
         }
 
         // Make everything globally available
@@ -301,6 +310,7 @@
         window.updateBalance = updateBalance;
         window.onSnapshot = onSnapshot;
         window.initializePlayer = initializePlayer;
+        window.formatLargeNumber = formatLargeNumber;
 
         // Initialize player balance
         await initializePlayer();

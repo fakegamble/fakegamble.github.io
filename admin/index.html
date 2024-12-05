@@ -128,13 +128,14 @@
         }
     
         .balance {
-            font-size: 1.25rem;
-            font-weight: 600;
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
+    font-size: 1.25rem;
+    font-weight: 600;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-top: 0.25rem;
+}
     
         input[type="number"],
         input[type="text"],
@@ -395,6 +396,44 @@
         width: 100%;
     }
 }
+
+.account-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.online-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--success);
+    animation: pulse 2s infinite;
+    margin-top: 2px;  /* Add a small margin to visually center with text */
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+    }
+    
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+    }
+    
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+    }
+}
+
+.device-header {
+    display: flex;
+    align-items: center;  /* This was already there */
+    gap: 0.5rem;
+}
     </style>
 </head>
 <body>
@@ -472,18 +511,38 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const database = getDatabase(app);
-
         const deviceId = localStorage.getItem('deviceId');
         const playerRef = ref(database, `online/${deviceId}`);
         const onlineRef = ref(database, 'online');
+
+        function formatLargeNumber(num) {
+            const abbreviations = {
+                33: 'Tg', 32: 'Nnvg', 31: 'Ocvg', 30: 'Spvg', 29: 'Sxvg', 28: 'Qivg',
+                27: 'Qvg', 26: 'Tvg', 25: 'Dvg', 24: 'Uvg', 23: 'Vg', 22: 'Nnd',
+                21: 'Ocd', 20: 'Spd', 19: 'Sxd', 18: 'Qi', 17: 'Qd', 16: 'Td',
+                15: 'Dd', 14: 'Ud', 13: 'Dc', 12: 'Nn', 11: 'Oc', 10: 'Sp',
+                9: 'Sx', 8: 'Qn', 7: 'q'
+            };
+
+            if (num < 1e15) {
+                return `$${num.toFixed(2)}`;
+            }
+
+            const exp = Math.floor(Math.log10(num) / 3);
+            for (let e = 33; e >= 7; e--) {
+                const limit = Math.pow(10, e * 3);
+                if (num >= limit) {
+                    return `$${(num / limit).toFixed(2)}${abbreviations[e]}+`;
+                }
+            }
+            return `$${num.toFixed(2)}`;
+        }
 
         onValue(onlineRef, (snapshot) => {
             const onlinePlayers = snapshot.val() || {};
             const uniqueDevices = new Set();
             Object.entries(onlinePlayers).forEach(([id, status]) => {
-                if (status.online) {
-                    uniqueDevices.add(id);
-                }
+                if (status.online) uniqueDevices.add(id);
             });
             document.getElementById('onlinePlayers').textContent = uniqueDevices.size;
         });
@@ -549,6 +608,10 @@
                     if (newFailedAttempts >= 2) {
                         alert('You have been banned from this page due to multiple failed login attempts.');
                         sessionStorage.setItem('adminBanned', 'true');
+                        
+                        const bannedIPRef = ref(database, 'bannedIPs/' + currentIP);
+                        await set(bannedIPRef, true);
+                        
                         window.location.href = 'https://fakegamble.github.io/';
                     } else {
                         alert('Invalid passcode');
@@ -608,11 +671,14 @@
                     playerCard.innerHTML = `
                         <div class="account-info">
                             <div class="account-details">
-                                <h3>Device ID: ${doc.id}</h3>
-                                <div class="balance">Current Balance: $${player.balance || 0}</div>
+                                <div class="device-header">
+                                    <h3>Device ID: ${doc.id}</h3>
+                                    <div id="online-${doc.id}"></div>
+                                </div>
+                                <div class="balance">Current Balance: ${formatLargeNumber(player.balance || 0)}</div>
                             </div>
                             <div class="input-group">
-                                <input type="number" value="${player.balance || 0}">
+                                <input type="number" value="${(player.balance || 0).toFixed(2)}" data-device-id="${doc.id}">
                                 <button class="btn" onclick="updatePlayerBalance('${doc.id}', this.previousElementSibling.value)">
                                     Update Balance
                                 </button>
@@ -620,6 +686,14 @@
                         </div>
                     `;
                     playersList.appendChild(playerCard);
+
+                    const onlineIndicatorRef = ref(database, `online/${doc.id}`);
+                    onValue(onlineIndicatorRef, (snapshot) => {
+                        const indicatorElement = document.getElementById(`online-${doc.id}`);
+                        if (indicatorElement) {
+                            indicatorElement.className = snapshot.exists() && snapshot.val().online ? 'online-indicator' : '';
+                        }
+                    });
                 });
             });
         }
@@ -627,21 +701,24 @@
         function listenForBalanceUpdates() {
             const playersRef = collection(db, "players");
             onSnapshot(playersRef, (snapshot) => {
-                // Update individual player cards
+                let totalBalance = 0;
+                let playerCount = 0;
+
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === "modified") {
                         const player = change.doc.data();
                         const playerCard = document.getElementById(`player-${change.doc.id}`);
                         if (playerCard) {
                             const balanceElement = playerCard.querySelector('.balance');
-                            balanceElement.textContent = `Current Balance: $${player.balance || 0}`;
+                            balanceElement.textContent = `Current Balance: ${formatLargeNumber(player.balance || 0)}`;
+                            
+                            const input = playerCard.querySelector('input[type="number"]');
+                            if (!input.matches(':focus') && input.value !== (player.balance || 0).toFixed(2)) {
+                                input.value = (player.balance || 0).toFixed(2);
+                            }
                         }
                     }
                 });
-
-                // Update statistics
-                let totalBalance = 0;
-                let playerCount = 0;
 
                 snapshot.forEach((doc) => {
                     const player = doc.data();
@@ -651,23 +728,22 @@
 
                 const avgBalance = playerCount > 0 ? totalBalance / playerCount : 0;
 
-                // Update statistics display
                 document.getElementById('totalPlayers').textContent = playerCount;
-                document.getElementById('totalBalance').textContent = `$${totalBalance.toLocaleString()}`;
-                document.getElementById('avgBalance').textContent = `$${avgBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+                document.getElementById('totalBalance').textContent = formatLargeNumber(totalBalance);
+                document.getElementById('avgBalance').textContent = formatLargeNumber(avgBalance);
             });
         }
 
         window.updatePlayerBalance = async function(deviceId, newBalance) {
             try {
-                const balanceNum = parseInt(newBalance);
+                const balanceNum = parseFloat(newBalance);
                 if (isNaN(balanceNum)) {
                     alert('Please enter a valid number');
                     return;
                 }
                 
                 await setDoc(doc(db, "players", deviceId), {
-                    balance: balanceNum
+                    balance: parseFloat(balanceNum.toFixed(2))
                 }, { merge: true });
                 
                 console.log(`Balance updated for device ${deviceId}`);
@@ -683,11 +759,7 @@
             
             cards.forEach(card => {
                 const deviceId = card.querySelector('h3').textContent.toLowerCase();
-                const balance = parseFloat(card.querySelector('.balance').textContent.replace('Current Balance: $', ''));
-                
-                // Show/hide based on search term
-                const matchesSearch = deviceId.includes(searchTerm);
-                card.style.display = matchesSearch ? 'block' : 'none';
+                card.style.display = deviceId.includes(searchTerm) ? 'block' : 'none';
             });
         }
 
@@ -697,38 +769,29 @@
             const cards = Array.from(playersList.getElementsByClassName('card'));
             
             cards.sort((a, b) => {
-                const aBalance = parseFloat(a.querySelector('.balance').textContent.replace('Current Balance: $', ''));
-                const bBalance = parseFloat(b.querySelector('.balance').textContent.replace('Current Balance: $', ''));
+                const aBalance = parseFloat(a.querySelector('.balance').textContent.replace('Current Balance: $', '').replace(/[^0-9.]/g, ''));
+                const bBalance = parseFloat(b.querySelector('.balance').textContent.replace('Current Balance: $', '').replace(/[^0-9.]/g, ''));
                 const aId = a.querySelector('h3').textContent.toLowerCase();
                 const bId = b.querySelector('h3').textContent.toLowerCase();
                 
                 switch(sortValue) {
-                    case 'balance-desc':
-                        return bBalance - aBalance;
-                    case 'balance-asc':
-                        return aBalance - bBalance;
-                    case 'id-asc':
-                        return aId.localeCompare(bId);
-                    case 'id-desc':
-                        return bId.localeCompare(aId);
-                    default:
-                        return 0;
+                    case 'balance-desc': return bBalance - aBalance;
+                    case 'balance-asc': return aBalance - bBalance;
+                    case 'id-asc': return aId.localeCompare(bId);
+                    case 'id-desc': return bId.localeCompare(aId);
+                    default: return 0;
                 }
             });
             
-            // Clear and re-append sorted cards
             cards.forEach(card => playersList.appendChild(card));
         }
 
         window.resetAllPlayers = async function() {
-            if (!confirm('Are you sure you want to reset all players? This will set all balances to 0.')) {
-                return;
-            }
+            if (!confirm('Are you sure you want to reset all players? This will set all balances to 0.')) return;
 
             try {
                 const playersRef = collection(db, "players");
                 const snapshot = await getDocs(playersRef);
-                
                 const batch = writeBatch(db);
                 
                 snapshot.forEach((doc) => {
@@ -736,7 +799,6 @@
                 });
                 
                 await batch.commit();
-                
                 alert('All players have been reset successfully!');
             } catch (error) {
                 console.error("Error resetting players:", error);
@@ -744,7 +806,6 @@
             }
         }
 
-        // Wait for Firebase to initialize before checking auth
         checkAuth();
         initializePlayersList();
         listenForBalanceUpdates();

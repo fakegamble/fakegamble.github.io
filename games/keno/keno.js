@@ -190,7 +190,12 @@ class KenoGame {
     }
 
     updateBalanceDisplay() {
-        document.querySelector('.balance-amount').textContent = `$${window.playerBalance.toFixed(2)}`;
+        const balance = window.playerBalance || 0;
+        const formattedBalance = balance.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        document.querySelector('.balance-amount').textContent = `$${formattedBalance}`;
     }
 
     adjustBet(multiplier) {

@@ -60,7 +60,7 @@ class GameHub {
 
     updateBalanceDisplay() {
         const balanceElement = document.querySelector('.balance-amount');
-        balanceElement.textContent = `$${this.balance.toFixed(2)}`;
+        balanceElement.textContent = this.formatLargeNumber(this.balance);
         
         balanceElement.classList.add('balance-update');
         setTimeout(() => balanceElement.classList.remove('balance-update'), 500);
@@ -319,6 +319,29 @@ class GameHub {
                 header.classList.remove('header-hidden');
             }
         }, { passive: true });
+    }
+
+    formatLargeNumber(num) {
+        const abbreviations = {
+            33: 'Tg', 32: 'Nnvg', 31: 'Ocvg', 30: 'Spvg', 29: 'Sxvg', 28: 'Qivg',
+            27: 'Qvg', 26: 'Tvg', 25: 'Dvg', 24: 'Uvg', 23: 'Vg', 22: 'Nnd',
+            21: 'Ocd', 20: 'Spd', 19: 'Sxd', 18: 'Qi', 17: 'Qd', 16: 'Td',
+            15: 'Dd', 14: 'Ud', 13: 'Dc', 12: 'Nn', 11: 'Oc', 10: 'Sp',
+            9: 'Sx', 8: 'Qn', 7: 'q'
+        };
+
+        if (num < 1e15) {
+            return `$${num.toFixed(2)}`;
+        }
+
+        const exp = Math.floor(Math.log10(num) / 3);
+        for (let e = 33; e >= 7; e--) {
+            const limit = Math.pow(10, e * 3);
+            if (num >= limit) {
+                return `$${(num / limit).toFixed(2)}${abbreviations[e]}+`;
+            }
+        }
+        return `$${num.toFixed(2)}`;
     }
 }
 

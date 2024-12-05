@@ -281,7 +281,12 @@ class MinesGame {
     updateBalanceDisplay() {
         // Add default value of 0 if playerBalance is undefined
         const balance = window.playerBalance || 0;
-        document.querySelector('.balance-amount').textContent = `$${balance.toFixed(2)}`;
+        // Format number with commas and 2 decimal places
+        const formattedBalance = balance.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        document.querySelector('.balance-amount').textContent = `$${formattedBalance}`;
     }
 
     adjustBet(multiplier) {
