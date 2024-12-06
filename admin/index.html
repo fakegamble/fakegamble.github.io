@@ -653,33 +653,37 @@
         }
 
         function initializePlayersList() {
-            const playersRef = collection(db, "players");
-            onSnapshot(playersRef, (snapshot) => {
+            const usersRef = collection(db, "users");
+            onSnapshot(usersRef, (snapshot) => {
                 const playersList = document.getElementById('players-list');
                 playersList.innerHTML = '';
 
                 if (snapshot.empty) {
-                    playersList.innerHTML = '<p>No active devices found. Players need to start playing to appear here!</p>';
+                    playersList.innerHTML = '<p>No users found.</p>';
                     return;
                 }
 
                 snapshot.forEach((doc) => {
-                    const player = doc.data();
+                    const user = doc.data();
+                    const userId = doc.id;
+                    // Get the balance from the correct path in user data
+                    const balance = user.balance?.amount || 0; // Using optional chaining to safely access nested property
+                    
                     const playerCard = document.createElement('div');
                     playerCard.className = 'card';
-                    playerCard.id = `player-${doc.id}`;
+                    playerCard.id = `player-${userId}`;
                     playerCard.innerHTML = `
                         <div class="account-info">
                             <div class="account-details">
                                 <div class="device-header">
-                                    <h3>Device ID: ${doc.id}</h3>
-                                    <div id="online-${doc.id}"></div>
+                                    <h3>Username: ${user.username || userId}</h3>
+                                    <div id="online-${userId}"></div>
                                 </div>
-                                <div class="balance">Current Balance: ${formatLargeNumber(player.balance || 0)}</div>
+                                <div class="balance">Current Balance: ${formatLargeNumber(balance)}</div>
                             </div>
                             <div class="input-group">
-                                <input type="number" value="${(player.balance || 0).toFixed(2)}" data-device-id="${doc.id}">
-                                <button class="btn" onclick="updatePlayerBalance('${doc.id}', this.previousElementSibling.value)">
+                                <input type="number" value="${balance.toFixed(2)}" data-username="${userId}">
+                                <button class="btn" onclick="updatePlayerBalance('${userId}', this.previousElementSibling.value)">
                                     Update Balance
                                 </button>
                             </div>
@@ -687,9 +691,9 @@
                     `;
                     playersList.appendChild(playerCard);
 
-                    const onlineIndicatorRef = ref(database, `online/${doc.id}`);
+                    const onlineIndicatorRef = ref(database, `online/${userId}`);
                     onValue(onlineIndicatorRef, (snapshot) => {
-                        const indicatorElement = document.getElementById(`online-${doc.id}`);
+                        const indicatorElement = document.getElementById(`online-${userId}`);
                         if (indicatorElement) {
                             indicatorElement.className = snapshot.exists() && snapshot.val().online ? 'online-indicator' : '';
                         }
@@ -699,30 +703,32 @@
         }
 
         function listenForBalanceUpdates() {
-            const playersRef = collection(db, "players");
-            onSnapshot(playersRef, (snapshot) => {
+            const usersRef = collection(db, "users");
+            onSnapshot(usersRef, (snapshot) => {
                 let totalBalance = 0;
                 let playerCount = 0;
 
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === "modified") {
-                        const player = change.doc.data();
+                        const user = change.doc.data();
+                        const balance = user.balance?.amount || 0;
                         const playerCard = document.getElementById(`player-${change.doc.id}`);
                         if (playerCard) {
                             const balanceElement = playerCard.querySelector('.balance');
-                            balanceElement.textContent = `Current Balance: ${formatLargeNumber(player.balance || 0)}`;
+                            balanceElement.textContent = `Current Balance: ${formatLargeNumber(balance)}`;
                             
                             const input = playerCard.querySelector('input[type="number"]');
-                            if (!input.matches(':focus') && input.value !== (player.balance || 0).toFixed(2)) {
-                                input.value = (player.balance || 0).toFixed(2);
+                            if (!input.matches(':focus') && input.value !== balance.toFixed(2)) {
+                                input.value = balance.toFixed(2);
                             }
                         }
                     }
                 });
 
                 snapshot.forEach((doc) => {
-                    const player = doc.data();
-                    totalBalance += player.balance || 0;
+                    const user = doc.data();
+                    const balance = user.balance?.amount || 0;
+                    totalBalance += balance;
                     playerCount++;
                 });
 
@@ -734,7 +740,7 @@
             });
         }
 
-        window.updatePlayerBalance = async function(deviceId, newBalance) {
+        window.updatePlayerBalance = async function(userId, newBalance) {
             try {
                 const balanceNum = parseFloat(newBalance);
                 if (isNaN(balanceNum)) {
@@ -742,11 +748,13 @@
                     return;
                 }
                 
-                await setDoc(doc(db, "players", deviceId), {
-                    balance: parseFloat(balanceNum.toFixed(2))
+                await setDoc(doc(db, "users", userId), {
+                    balance: {
+                        amount: parseFloat(balanceNum.toFixed(2))
+                    }
                 }, { merge: true });
                 
-                console.log(`Balance updated for device ${deviceId}`);
+                console.log(`Balance updated for user ${userId}`);
             } catch (error) {
                 console.error("Error updating balance:", error);
                 alert("Error updating balance: " + error.message);

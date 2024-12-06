@@ -1,5 +1,19 @@
 class MinesGame {
     constructor() {
+        // Wait for Firebase and balance initialization before checking login
+        window.addEventListener('balanceInitialized', () => {
+            const username = localStorage.getItem('username');
+            const userId = localStorage.getItem('userId');
+            if (!username || !userId) {
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            this.initializeGame();
+        });
+    }
+
+    initializeGame() {
         this.gridSize = 5;
         this.totalTiles = this.gridSize * this.gridSize;
         this.mines = [];
@@ -44,14 +58,6 @@ class MinesGame {
                 localStorage.setItem('gameBalance', newValue.toFixed(2));
             }
         });
-
-        // Add check for existing balance before redirect
-        const username = localStorage.getItem('username');
-        const userId = localStorage.getItem('userId');
-        if (!username || !userId) {
-            window.location.href = '/login.html';
-            return;
-        }
 
         // Initialize player data
         const playerRef = window.doc(window.db, "users", username);
