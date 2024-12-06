@@ -296,7 +296,21 @@
         const database = getDatabase(app);
 
         function formatLargeNumber(num) {
-            return `$${num.toFixed(2)}`;
+            // Ensure num is a number
+            num = Number(num);
+            
+            // Check if conversion was successful
+            if (isNaN(num)) {
+                return '0.00';
+            }
+
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(2) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(2) + 'K';
+            } else {
+                return num.toFixed(2);
+            }
         }
 
         // Check if user is logged in
@@ -320,27 +334,17 @@
         async function initializePlayer() {
             const username = checkLogin();
             const playerRef = doc(db, "users", username);
+            const playerDoc = await getDoc(playerRef);
             
-            // Set up real-time listener
-            onSnapshot(playerRef, (doc) => {
-                if (doc.exists()) {
-                    const balance = doc.data().balance;
-                    window.playerBalance = balance;
-                    document.querySelector('.balance-amount').textContent = formatLargeNumber(balance);
-                    
-                    // Notify GameHub of balance change
-                    if (window.gameHub) {
-                        window.gameHub.balance = balance;
-                        window.gameHub.updateBalanceDisplay();
-                    }
-                } else {
-                    localStorage.removeItem('username');
-                    localStorage.removeItem('userId');
-                    window.location.href = '/login.html';
-                }
-            }, error => {
-                console.error("Balance listener error:", error);
-            });
+            if (!playerDoc.exists()) {
+                // If user document doesn't exist, redirect to login
+                localStorage.removeItem('username');
+                localStorage.removeItem('userId');
+                window.location.href = '/login.html';
+            } else {
+                window.playerBalance = playerDoc.data().balance;
+            }
+            document.querySelector('.balance-amount').textContent = formatLargeNumber(window.playerBalance);
         }
 
         // Make everything globally available
