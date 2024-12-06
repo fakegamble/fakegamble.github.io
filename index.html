@@ -249,21 +249,10 @@
                 <div class="settings-section">
                     <h3>Credits</h3>
                     <div class="credits-info">
-                        <p>Developed by <a href="https://zkql.github.io/" target="_blank">Xavier</a></p>
+                        <p>Developed by <a href="https://fakegamble.github.io/" target="_blank">Xavier</a></p>
                         <p>Version 1.0.0</p>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-    <div class="login-prompt" style="display: none;">
-        <div class="login-content">
-            <h2>Login Required</h2>
-            <p>Please log in to play games and manage your balance.</p>
-            <div class="login-buttons">
-                <button onclick="window.location.href='/'" class="home-btn">Return Home</button>
-                <button onclick="showLoginForm()" class="login-btn">Login</button>
-                <button onclick="showRegisterForm()" class="register-btn">Register</button>
             </div>
         </div>
     </div>
@@ -310,98 +299,76 @@
             return `$${num.toFixed(2)}`;
         }
 
+        // Check if user is logged in
+        function checkLogin() {
+            const username = localStorage.getItem('username');
+            if (!username) {
+                window.location.href = '/login.html';
+            }
+            return username;
+        }
+
         // Update balance function
         async function updateBalance(newBalance) {
-            try {
-                const userData = JSON.parse(localStorage.getItem('userData'));
-                if (!userData || !userData.username) {
-                    throw new Error('User not logged in');
-                }
-
-                const userRef = doc(db, "users", userData.username);
-                await setDoc(userRef, { balance: newBalance }, { merge: true });
-                window.playerBalance = newBalance;
-                document.querySelector('.balance-amount').textContent = formatLargeNumber(window.playerBalance);
-                
-                return newBalance;
-            } catch (error) {
-                console.error("Error updating balance:", error);
-                throw error;
-            }
+            const username = checkLogin();
+            const playerRef = doc(db, "users", username);
+            await setDoc(playerRef, { balance: newBalance }, { merge: true });
+            return newBalance;
         }
 
         // Initialize player function
         async function initializePlayer() {
-            try {
-                const userData = JSON.parse(localStorage.getItem('userData'));
-                if (!userData || !userData.username) {
-                    window.location.href = '/login.html';
-                    return;
-                }
-
-                const userRef = doc(db, "users", userData.username);
-                
-                // Set up real-time listener for balance changes
-                onSnapshot(userRef, (doc) => {
-                    if (doc.exists()) {
-                        window.playerBalance = doc.data().balance;
-                        document.querySelector('.balance-amount').textContent = formatLargeNumber(window.playerBalance);
-                    }
-                });
-                
-                // Initial fetch
-                const userDoc = await getDoc(userRef);
-                if (!userDoc.exists()) {
-                    throw new Error('User data not found');
-                }
-
-                window.playerBalance = userDoc.data().balance;
-                document.querySelector('.balance-amount').textContent = formatLargeNumber(window.playerBalance);
-                
-            } catch (error) {
-                console.error("Error initializing player:", error);
-                showError('Error loading player data');
+            const username = checkLogin();
+            const playerRef = doc(db, "users", username);
+            const playerDoc = await getDoc(playerRef);
+            
+            if (!playerDoc.exists()) {
+                // If user document doesn't exist, redirect to login
+                localStorage.removeItem('username');
+                localStorage.removeItem('userId');
+                window.location.href = '/login.html';
+            } else {
+                window.playerBalance = playerDoc.data().balance;
             }
+            document.querySelector('.balance-amount').textContent = formatLargeNumber(window.playerBalance);
         }
 
         // Make everything globally available
         window.db = db;
         window.doc = doc;
-        window.getDoc = getDoc;
-        window.setDoc = setDoc;
         window.updateBalance = updateBalance;
+        window.onSnapshot = onSnapshot;
         window.initializePlayer = initializePlayer;
+        window.formatLargeNumber = formatLargeNumber;
 
         // Initialize player balance
         await initializePlayer();
 
         // Online presence tracking
-        const userData = JSON.parse(localStorage.getItem('userData'));
-        if (userData && userData.username) {
-            const userRef = ref(database, `online/${userData.username}`);
-            const onlineRef = ref(database, 'online');
+        const username = checkLogin();
+        const playerRef = ref(database, `online/${username}`);
+        const onlineRef = ref(database, 'online');
 
-            onValue(onlineRef, (snapshot) => {
-                const onlinePlayers = snapshot.val() || {};
-                const uniqueUsers = new Set();
-                Object.entries(onlinePlayers).forEach(([id, status]) => {
-                    if (status.online) {
-                        uniqueUsers.add(id);
-                    }
-                });
-                document.getElementById('onlinePlayers').textContent = uniqueUsers.size;
-            });
-
-            onValue(ref(database, '.info/connected'), (snapshot) => {
-                if (snapshot.val() === true) {
-                    onDisconnect(userRef).remove();
-                    set(userRef, {
-                        online: true,
-                        lastSeen: serverTimestamp()
-                    });
+        onValue(onlineRef, (snapshot) => {
+            const onlinePlayers = snapshot.val() || {};
+            const uniqueDevices = new Set();
+            Object.entries(onlinePlayers).forEach(([id, status]) => {
+                if (status.online) {
+                    uniqueDevices.add(id);
                 }
             });
-        }
+            document.getElementById('onlinePlayers').textContent = uniqueDevices.size;
+        });
+
+        onValue(ref(database, '.info/connected'), (snapshot) => {
+            if (snapshot.val() === true && username) {
+                onDisconnect(playerRef).remove();
+                set(playerRef, {
+                    online: true,
+                    lastSeen: serverTimestamp()
+                });
+            }
+        });
     </script>
 </body>
 </html>

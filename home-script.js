@@ -17,18 +17,22 @@ class GameHub {
     }
 
     setupBalanceListener() {
-        const userData = JSON.parse(localStorage.getItem('userData'));
-        if (!userData || !userData.username) {
+        const username = localStorage.getItem('username');
+        if (!username) {
             window.location.href = '/login.html';
             return;
         }
+        const playerRef = doc(db, "users", username);
         
-        const userRef = window.doc(window.db, "users", userData.username);
-        
-        window.onSnapshot(userRef, (doc) => {
+        onSnapshot(playerRef, (doc) => {
             if (doc.exists()) {
-                window.playerBalance = doc.data().balance;
+                this.balance = doc.data().balance;
                 this.updateBalanceDisplay();
+            } else {
+                // If user document doesn't exist, redirect to login
+                localStorage.removeItem('username');
+                localStorage.removeItem('userId');
+                window.location.href = '/login.html';
             }
         });
     }
@@ -52,8 +56,7 @@ class GameHub {
     }
 
     initializeWelcomeMessage() {
-        const userData = JSON.parse(localStorage.getItem('userData'));
-        const username = userData?.username || 'Player';
+        const username = localStorage.getItem('username') || 'Player';
         const mainContent = document.querySelector('.main-content');
         const welcomeDiv = document.createElement('div');
         welcomeDiv.className = 'welcome-message';
@@ -121,18 +124,15 @@ class GameHub {
             }
 
             const amount = 1000;
+            const username = localStorage.getItem('username');
+            
+            if (!username) {
+                window.location.href = '/login.html';
+                return;
+            }
             
             try {
-                const userData = JSON.parse(localStorage.getItem('userData'));
-                if (!userData || !userData.username) {
-                    window.location.href = '/login.html';
-                    return;
-                }
-
-                const userRef = window.doc(window.db, "users", userData.username);
-                await window.setDoc(userRef, { 
-                    balance: window.playerBalance + amount 
-                }, { merge: true });
+                await window.updateBalance(this.balance + amount);
                 
                 this.lastAddMoney = Date.now();
                 localStorage.setItem('lastAddMoney', this.lastAddMoney);
@@ -162,6 +162,7 @@ class GameHub {
             if (timeLeft <= 0) {
                 clearInterval(this.cooldownTimer);
                 this.showNotification('You can add money again!', 'info');
+                // Save the current time as the last add money time
                 this.lastAddMoney = Date.now();
                 localStorage.setItem('lastAddMoney', this.lastAddMoney);
             }
@@ -361,7 +362,3 @@ class GameHub {
 document.addEventListener('DOMContentLoaded', () => {
     window.gameHub = new GameHub();
 });
-
-function hashPassword(password) {
-    return btoa(password); // Basic encoding for demo purposes
-}

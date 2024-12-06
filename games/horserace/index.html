@@ -144,8 +144,8 @@
 
         // Update balance function
         async function updateBalance(newBalance) {
-            const userId = JSON.parse(localStorage.getItem('userData')).username;
-            const playerRef = doc(db, "players", userId);
+            const deviceId = getDeviceId();
+            const playerRef = doc(db, "players", deviceId);
             await setDoc(playerRef, { balance: newBalance }, { merge: true });
             return newBalance;
         }

@@ -2,60 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fake Gamble | Login</title>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link rel="icon" type="image/x-icon" href="./assets/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - FakeGamble</title>
     <style>
-        * {
+        body {
+            font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-            font-family: system-ui, -apple-system, sans-serif;
-        }
-
-        body {
-            background-color: #0f172a;
-            color: white;
-            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 1rem;
+            min-height: 100vh;
+            background: #0f172a;
+            color: #fff;
         }
 
         .login-container {
-            background-color: #1e293b;
+            background: #1e293b;
             padding: 2rem;
             border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             width: 100%;
             max-width: 400px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            text-decoration: none;
-            color: white;
-            margin-bottom: 1rem;
-        }
-
-        .logo .material-icons {
-            font-size: 2rem;
-            color: #4f46e5;
+            margin: 1rem;
         }
 
         h1 {
-            font-size: 1.5rem;
-            margin: 0;
+            margin: 0 0 1.5rem 0;
+            text-align: center;
+            color: #f8fafc;
         }
 
         .form-group {
@@ -65,207 +40,157 @@
         label {
             display: block;
             margin-bottom: 0.5rem;
-            color: #94a3b8;
+            color: #cbd5e1;
         }
 
         input {
             width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #334155;
-            border-radius: 0.375rem;
-            background-color: #0f172a;
-            color: white;
-            font-size: 1rem;
+            padding: 0.5rem;
+            border: 1px solid #475569;
+            border-radius: 0.25rem;
+            background: #334155;
+            color: #fff;
+            box-sizing: border-box;
         }
 
         input:focus {
             outline: none;
-            border-color: #4f46e5;
+            border-color: #60a5fa;
         }
 
         button {
             width: 100%;
             padding: 0.75rem;
-            background-color: #4f46e5;
+            background: #2563eb;
             color: white;
             border: none;
-            border-radius: 0.375rem;
-            font-size: 1rem;
+            border-radius: 0.25rem;
             cursor: pointer;
-            transition: background-color 0.2s;
+            font-size: 1rem;
+            margin-top: 1rem;
         }
 
         button:hover {
-            background-color: #4338ca;
+            background: #1d4ed8;
+        }
+
+        .error {
+            color: #ef4444;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
         }
 
         .links {
             margin-top: 1rem;
             text-align: center;
-            color: #94a3b8;
         }
 
         .links a {
-            color: #4f46e5;
+            color: #60a5fa;
             text-decoration: none;
         }
 
         .links a:hover {
             text-decoration: underline;
         }
-
-        .error-message {
-            background-color: #dc2626;
-            color: white;
-            padding: 0.75rem;
-            border-radius: 0.375rem;
-            margin-bottom: 1rem;
-            display: none;
-        }
-
-        .success-message {
-            background-color: #059669;
-            color: white;
-            padding: 0.75rem;
-            border-radius: 0.375rem;
-            margin-bottom: 1rem;
-            display: none;
-        }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <div class="header">
-            <a href="/" class="logo">
-                <span class="material-icons">casino</span>
-                <h1>Fake Gamble</h1>
-            </a>
-            <p>Welcome back!</p>
-        </div>
-
-        <div class="error-message" id="errorMessage"></div>
-        <div class="success-message" id="successMessage"></div>
-
+        <h1>Login</h1>
         <form id="loginForm">
+            <div id="loading" style="display: none; text-align: center; margin-bottom: 1rem;">
+                Logging in...
+            </div>
             <div class="form-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" name="username" required autocomplete="username">
+                <input type="text" id="username" required>
             </div>
-
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" required autocomplete="current-password">
+                <input type="password" id="password" required>
             </div>
-
+            <div id="error" class="error"></div>
             <button type="submit">Login</button>
         </form>
-
         <div class="links">
-            <p>Don't have an account? <a href="register.html">Register</a></p>
+            <a href="register.html">Don't have an account? Register</a>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        const _0x3f8b2c = {
-            _k: 'QWlhU3lCV1N2Q1VnbGw4T2NvdWJDaTBHZUF2Vm5DV18zYkVzV3c=',
-            _d: 'dmlld3MtZDBiM2Iud2ViLmFwcA==',
-            _u: 'aHR0cHM6Ly92aWV3cy1kMGIzYi1kZWZhdWx0LXJ0ZGIuZmlyZWJhc2Vpby5jb20=',
-            _p: 'dmlld3MtZDBiM2I=',
-            _s: 'dmlld3MtZDBiM2IuZmlyZWJhc2VzdG9yYWdlLmFwcA==',
-            _m: 'Mjc4NTU0MTAwOTc=',
-            _a: 'MToyNzg1NTQxMDA5Nzp3ZWI6MDJlN2E0OWEwMWJlMTBkZGMzMjM5MA==',
-            _t: 'Ry01RFBEWllEUkZK'
-        };
+        import { 
+            getFirestore, 
+            doc, 
+            getDoc 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
-            apiKey: atob(_0x3f8b2c._k),
-            authDomain: atob(_0x3f8b2c._d),
-            databaseURL: atob(_0x3f8b2c._u),
-            projectId: atob(_0x3f8b2c._p),
-            storageBucket: atob(_0x3f8b2c._s),
-            messagingSenderId: atob(_0x3f8b2c._m),
-            appId: atob(_0x3f8b2c._a),
-            measurementId: atob(_0x3f8b2c._t)
+            apiKey: "AIzaSyBWSvCUgql8OcoubCi0GeAvVnCW_3bEsWw",
+            authDomain: "views-d0b3b.firebaseapp.com",
+            databaseURL: "https://views-d0b3b-default-rtdb.firebaseio.com",
+            projectId: "views-d0b3b",
+            storageBucket: "views-d0b3b.appspot.com",
+            messagingSenderId: "27855410097",
+            appId: "1:27855410097:web:02e7a49a01be10ddc32390",
+            measurementId: "G-5DPDZYDRFJ"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
-
-        function showError(message) {
-            const errorElement = document.getElementById('errorMessage');
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-            setTimeout(() => {
-                errorElement.style.display = 'none';
-            }, 3000);
-        }
-
-        function showSuccess(message) {
-            const successElement = document.getElementById('successMessage');
-            successElement.textContent = message;
-            successElement.style.display = 'block';
-            setTimeout(() => {
-                successElement.style.display = 'none';
-            }, 3000);
-        }
-
-        function hashPassword(password) {
-            // Simple hash function (for demo purposes - use a proper hash in production)
-            let hash = 0;
-            for (let i = 0; i < password.length; i++) {
-                const char = password.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash;
-            }
-            const result = hash.toString();
-            console.log('Hashed password:', result);
-            return result;
-        }
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const form = e.target;
+            const errorDiv = document.getElementById('error');
+            const loadingDiv = document.getElementById('loading');
+            const submitButton = form.querySelector('button[type="submit"]');
 
-            const username = document.getElementById('username').value.toLowerCase();
-            const password = document.getElementById('password').value;
+            // Disable form while submitting
+            submitButton.disabled = true;
+            loadingDiv.style.display = 'block';
+            errorDiv.textContent = '';
 
             try {
-                const userRef = doc(db, "users", username);
-                const userDoc = await getDoc(userRef);
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
 
+                // Get user data
+                const userDoc = await getDoc(doc(db, "users", username));
                 if (!userDoc.exists()) {
-                    showError('User not found');
-                    return;
+                    throw new Error("Username not found");
                 }
 
                 const userData = userDoc.data();
-                const hashedPassword = hashPassword(password);
-                
-                if (userData.password !== hashedPassword) {
-                    showError('Invalid password');
-                    return;
+                if (userData.password !== password) {
+                    throw new Error("Incorrect password");
                 }
-                const userInfo = {
-                    username: username,
-                    displayName: userData.displayName || username
-                };
-                localStorage.setItem('userData', JSON.stringify(userInfo));
 
-                showSuccess('Login successful! Redirecting...');
-                e.target.reset();
+                // Store user info in localStorage
+                localStorage.setItem('userId', username);
+                localStorage.setItem('username', username);
 
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1000);
-
+                // Redirect to home page
+                window.location.href = '/';
             } catch (error) {
-                console.error('Login error:', error);
-                showError(error.message);
+                console.error(error);
+                let errorMessage = error.message;
+                errorDiv.textContent = errorMessage;
+            } finally {
+                // Re-enable form
+                submitButton.disabled = false;
+                loadingDiv.style.display = 'none';
             }
         });
+
+        // Check if user is already logged in
+        const userId = localStorage.getItem('userId');
+        if (userId) {
+            window.location.href = '/';
+        }
     </script>
 </body>
 </html> 

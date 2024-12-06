@@ -3,33 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register | Fake Gamble</title>
+    <title>Register - FakeGamble</title>
     <style>
         body {
-            background-color: #0f172a;
-            color: white;
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             margin: 0;
-            padding: 20px;
-            min-height: 100vh;
+            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
+            min-height: 100vh;
+            background: #0f172a;
+            color: #fff;
         }
 
-        .register-container {
+        .login-container {
             background: #1e293b;
             padding: 2rem;
-            border-radius: 10px;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             width: 100%;
             max-width: 400px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 1rem;
         }
 
         h1 {
+            margin: 0 0 1.5rem 0;
             text-align: center;
-            margin-bottom: 1.5rem;
-            color: #4f46e5;
+            color: #f8fafc;
         }
 
         .form-group {
@@ -39,38 +40,38 @@
         label {
             display: block;
             margin-bottom: 0.5rem;
-            color: #94a3b8;
+            color: #cbd5e1;
         }
 
         input {
             width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #334155;
-            border-radius: 5px;
-            background: #0f172a;
-            color: white;
+            padding: 0.5rem;
+            border: 1px solid #475569;
+            border-radius: 0.25rem;
+            background: #334155;
+            color: #fff;
             box-sizing: border-box;
         }
 
         input:focus {
             outline: none;
-            border-color: #4f46e5;
+            border-color: #60a5fa;
         }
 
         button {
             width: 100%;
             padding: 0.75rem;
-            background: #4f46e5;
+            background: #2563eb;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 0.25rem;
             cursor: pointer;
             font-size: 1rem;
             margin-top: 1rem;
         }
 
         button:hover {
-            background: #4338ca;
+            background: #1d4ed8;
         }
 
         .error {
@@ -79,276 +80,148 @@
             font-size: 0.875rem;
         }
 
-        .success {
-            color: #22c55e;
-            margin-top: 0.5rem;
-            font-size: 0.875rem;
-        }
-
-        .login-link {
-            text-align: center;
+        .links {
             margin-top: 1rem;
+            text-align: center;
         }
 
-        .login-link a {
-            color: #4f46e5;
+        .links a {
+            color: #60a5fa;
             text-decoration: none;
         }
 
-        .login-link a:hover {
+        .links a:hover {
             text-decoration: underline;
-        }
-
-        .password-requirements {
-            font-size: 0.75rem;
-            color: #94a3b8;
-            margin-top: 0.25rem;
         }
     </style>
 </head>
 <body>
-    <div class="register-container">
-        <h1>Create Account</h1>
+    <div class="login-container">
+        <h1>Register</h1>
         <form id="registerForm">
+            <div id="loading" style="display: none; text-align: center; margin-bottom: 1rem;">
+                Registering...
+            </div>
             <div class="form-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" required minlength="3" maxlength="20">
-                <div class="password-requirements">
-                    3-20 characters, letters and numbers only
-                </div>
+                <input type="text" id="username" required>
             </div>
-            
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" required minlength="6">
-                <div class="password-requirements">
-                    Minimum 6 characters
-                </div>
+                <input type="password" id="password" required>
             </div>
-            
             <div class="form-group">
                 <label for="confirmPassword">Confirm Password</label>
                 <input type="password" id="confirmPassword" required>
             </div>
-            
-            <div id="errorMessage" class="error" style="display: none;"></div>
-            <div id="successMessage" class="success" style="display: none;"></div>
-            
-            <button type="submit">Create Account</button>
+            <div id="error" class="error"></div>
+            <button type="submit">Register</button>
         </form>
-        
-        <div class="login-link">
-            Already have an account? <a href="login.html">Login here</a>
+        <div class="links">
+            <a href="login.html">Already have an account? Login</a>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getDatabase } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-        import { AuthManager } from './auth.js';
-
-        const _0x3f8b2c = {
-            _k: 'QWlhU3lCV1N2Q1VnbGw4T2NvdWJDaTBHZUF2Vm5DV18zYkVzV3c=',
-            _d: 'dmlld3MtZDBiM2Iud2ViLmFwcA==',
-            _u: 'aHR0cHM6Ly92aWV3cy1kMGIzYi1kZWZhdWx0LXJ0ZGIuZmlyZWJhc2Vpby5jb20=',
-            _p: 'dmlld3MtZDBiM2I=',
-            _s: 'dmlld3MtZDBiM2IuZmlyZWJhc2VzdG9yYWdlLmFwcA==',
-            _m: 'Mjc4NTU0MTAwOTc=',
-            _a: 'MToyNzg1NTQxMDA5Nzp3ZWI6MDJlN2E0OWEwMWJlMTBkZGMzMjM5MA==',
-            _t: 'Ry01RFBEWllEUkZK'
-        };
+        import { 
+            getFirestore, 
+            doc, 
+            setDoc,
+            getDoc 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
-            apiKey: atob(_0x3f8b2c._k),
-            authDomain: atob(_0x3f8b2c._d),
-            databaseURL: atob(_0x3f8b2c._u),
-            projectId: atob(_0x3f8b2c._p),
-            storageBucket: atob(_0x3f8b2c._s),
-            messagingSenderId: atob(_0x3f8b2c._m),
-            appId: atob(_0x3f8b2c._a),
-            measurementId: atob(_0x3f8b2c._t)
+            apiKey: "AIzaSyBWSvCUgql8OcoubCi0GeAvVnCW_3bEsWw",
+            authDomain: "views-d0b3b.firebaseapp.com",
+            databaseURL: "https://views-d0b3b-default-rtdb.firebaseio.com",
+            projectId: "views-d0b3b",
+            storageBucket: "views-d0b3b.appspot.com",
+            messagingSenderId: "27855410097",
+            appId: "1:27855410097:web:02e7a49a01be10ddc32390",
+            measurementId: "G-5DPDZYDRFJ"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
-        const database = getDatabase(app);
-        const auth = new AuthManager();
 
-        const registerForm = document.getElementById('registerForm');
-        const errorMessage = document.getElementById('errorMessage');
-        const successMessage = document.getElementById('successMessage');
-
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-            successMessage.style.display = 'none';
-        }
-
-        function showSuccess(message) {
-            successMessage.textContent = message;
-            successMessage.style.display = 'block';
-            errorMessage.style.display = 'none';
-        }
-
-        function validateUsername(username) {
-            return /^[a-zA-Z0-9]{3,20}$/.test(username);
-        }
-
-        function hashPassword(password) {
-            // In a real application, use a proper password hashing algorithm
-            return btoa(password);
-        }
-
-        const profanityFilter = {
-            // Direct profanity list (add more as needed)
-            badWords: [
-                'fuck', 'shit', 'ass', 'bitch', 'dick', 'pussy', 'cock', 'whore', 'slut',
-                'nigger', 'nigga', 'faggot', 'cunt', 'penis', 'vagina', 'porn'
-            ],
-            
-            // Common letter substitutions
-            substitutions: {
-                'a': ['@', '4', 'α', 'а', 'λ'],
-                'b': ['8', '6', 'β', 'б'],
-                'e': ['3', '€', 'е', 'ε'],
-                'i': ['1', '!', '|', 'і', 'ι'],
-                'l': ['1', '|', 'і', 'ι'],
-                'o': ['0', 'θ', 'о', 'σ'],
-                's': ['5', '$', 'ѕ', 'š'],
-                't': ['7', '+', 'т'],
-                'u': ['υ', 'и', 'μ'],
-                'v': ['ν', 'v'],
-                'x': ['×', 'х'],
-                'y': ['ү', 'у', 'γ']
-            },
-
-            // Normalize text by replacing common substitutions
-            normalizeText(text) {
-                let normalized = text.toLowerCase();
-                
-                // Replace all possible substitutions with their base letter
-                Object.entries(this.substitutions).forEach(([letter, subs]) => {
-                    subs.forEach(sub => {
-                        normalized = normalized.replace(new RegExp(sub, 'g'), letter);
-                    });
-                });
-
-                // Remove common separator characters (escape the hyphen properly)
-                normalized = normalized.replace(/[._\-\s]/g, '');
-                
-                // Remove repeated letters (e.g., "fuccck" -> "fuck")
-                normalized = normalized.replace(/(.)\1+/g, '$1');
-
-                return normalized;
-            },
-
-            // Check if text contains profanity
-            hasProfanity(text) {
-                const normalized = this.normalizeText(text);
-                
-                // Check for exact matches and substring matches
-                return this.badWords.some(word => {
-                    const normalizedBadWord = this.normalizeText(word);
-                    return normalized.includes(normalizedBadWord);
-                });
-            },
-
-            // Suggest a clean version of the username
-            suggestCleanUsername(username) {
-                if (!this.hasProfanity(username)) return username;
-                
-                // Replace detected profanity with asterisks
-                let cleaned = username;
-                this.badWords.forEach(word => {
-                    const regex = new RegExp(word, 'gi');
-                    cleaned = cleaned.replace(regex, '*'.repeat(word.length));
-                });
-                return cleaned;
-            }
-        };
-
-        // Add real-time username checking (optional)
-        document.getElementById('username').addEventListener('input', (e) => {
-            const username = e.target.value.toLowerCase();
-            
-            if (profanityFilter.hasProfanity(username)) {
-                showError('This username contains inappropriate content');
-            } else {
-                errorMessage.style.display = 'none';
-            }
-        });
-
-        registerForm.addEventListener('submit', async (e) => {
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            const username = document.getElementById('username').value.toLowerCase();
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
+            const form = e.target;
+            const errorDiv = document.getElementById('error');
+            const loadingDiv = document.getElementById('loading');
+            const submitButton = form.querySelector('button[type="submit"]');
 
-            // Reset messages
-            errorMessage.style.display = 'none';
-            successMessage.style.display = 'none';
+            // Disable form while submitting
+            submitButton.disabled = true;
+            loadingDiv.style.display = 'block';
+            errorDiv.textContent = '';
 
             try {
-                // Check for profanity first
-                if (profanityFilter.hasProfanity(username)) {
-                    throw new Error('Username contains inappropriate content. Please choose a different username.');
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+
+                console.log('Attempting registration with:', { username, password });
+
+                // Validate password match
+                if (password !== confirmPassword) {
+                    throw new Error("Passwords don't match");
                 }
 
-                // Validate username format
-                if (!validateUsername(username)) {
-                    throw new Error('Username must be 3-20 characters and contain only letters and numbers');
+                // Validate username
+                if (username.length < 3) {
+                    throw new Error("Username must be at least 3 characters long");
+                }
+
+                if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+                    throw new Error("Username can only contain letters, numbers, and underscores");
                 }
 
                 // Validate password
                 if (password.length < 6) {
-                    throw new Error('Password must be at least 6 characters');
-                }
-
-                // Check if passwords match
-                if (password !== confirmPassword) {
-                    throw new Error('Passwords do not match');
+                    throw new Error("Password must be at least 6 characters long");
                 }
 
                 // Check if username exists
-                const userRef = doc(db, "users", username);
-                const userDoc = await getDoc(userRef);
-
-                if (userDoc.exists()) {
-                    throw new Error('Username already taken');
+                const usernameDoc = await getDoc(doc(db, "users", username));
+                if (usernameDoc.exists()) {
+                    throw new Error("Username already taken");
                 }
 
-                // Create user document
-                // First create user document
-                await setDoc(userRef, {
+                // Store user data
+                console.log('Storing user data...');
+                await setDoc(doc(db, "users", username), {
                     username: username,
-                    displayName: username,
-                    password: hashPassword(password),
+                    password: password,
+                    balance: 100,
                     createdAt: new Date().toISOString()
                 });
 
-                // Then create initial player document with deviceId
-                const playerRef = doc(db, "players", username);
-                await setDoc(playerRef, { 
-                    balance: 100
-                });
+                // Store user info in localStorage
+                localStorage.setItem('userId', username);
+                localStorage.setItem('username', username);
 
-                showSuccess('Account created successfully! Redirecting to login...');
-                
-                // Clear form
-                registerForm.reset();
-
-                // Redirect to login page after 2 seconds
-                setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 2000);
-
+                // Redirect to home page
+                window.location.href = '/';
             } catch (error) {
-                showError(error.message);
+                console.error('Registration error:', error);
+                let errorMessage = error.message;
+                errorDiv.textContent = errorMessage;
+            } finally {
+                // Re-enable form
+                submitButton.disabled = false;
+                loadingDiv.style.display = 'none';
             }
         });
+
+        // Check if user is already logged in
+        const userId = localStorage.getItem('userId');
+        if (userId) {
+            window.location.href = '/';
+        }
     </script>
 </body>
-</html>
+</html> 
