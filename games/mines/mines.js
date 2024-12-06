@@ -35,15 +35,35 @@ class MinesGame {
             21: 76.00
         };
 
-        // Add balance change listener
+        // Modify the balance change listener
         Object.defineProperty(window, 'playerBalance', {
             get: function() {
-                return this._playerBalance;
+                return parseFloat(localStorage.getItem('gameBalance')) || 0;
             },
             set: function(newValue) {
-                this._playerBalance = newValue;
-                this.updateBalanceDisplay();
-            }.bind(this)
+                localStorage.setItem('gameBalance', newValue.toFixed(2));
+            }
+        });
+
+        // Add check for existing balance before redirect
+        const username = localStorage.getItem('username');
+        const userId = localStorage.getItem('userId');
+        if (!username || !userId) {
+            window.location.href = '/login.html';
+            return;
+        }
+
+        // Initialize player data
+        const playerRef = window.doc(window.db, "users", username);
+        window.onSnapshot(playerRef, (doc) => {
+            if (doc.exists()) {
+                const data = doc.data();
+                if (data.balance !== undefined) {
+                    window.playerBalance = data.balance;
+                    this.updateBalanceDisplay();
+                    window.dispatchEvent(new Event('balanceInitialized'));
+                }
+            }
         });
 
         this.initializeDOM();
