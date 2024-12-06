@@ -128,58 +128,67 @@
             measurementId: atob(_0x3f8b2c._t)
         };
 
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const database = getDatabase(app);
 
-        // Generate or get device ID
-        function getDeviceId() {
-            let deviceId = localStorage.getItem('deviceId');
-            if (!deviceId) {
-                deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
-                localStorage.setItem('deviceId', deviceId);
+        // Generate or get username
+        function checkLogin() {
+            const username = localStorage.getItem('username');
+            if (!username) {
+                window.location.href = '/login.html';
             }
-            return deviceId;
+            return username;
         }
 
-        // Update balance function
-        async function updateBalance(newBalance) {
-            const deviceId = getDeviceId();
-            const playerRef = doc(db, "players", deviceId);
-            await setDoc(playerRef, { balance: newBalance }, { merge: true });
-            return newBalance;
-        }
-
-        // Initialize player function
-        async function initializePlayer() {
-            const deviceId = getDeviceId();
-            const playerRef = doc(db, "players", deviceId);
-            const playerDoc = await getDoc(playerRef);
-            
-            if (!playerDoc.exists()) {
-                await setDoc(playerRef, { balance: 100 }); // Default starting balance
-                window.playerBalance = 100;
-            } else {
-                window.playerBalance = playerDoc.data().balance;
-            }
-            
-            // Dispatch event when balance is initialized
-            window.dispatchEvent(new Event('balanceInitialized'));
-        }
-
-        // Make everything globally available
+        // Make everything globally available first
         window.db = db;
         window.doc = doc;
-        window.getDeviceId = getDeviceId;
-        window.updateBalance = updateBalance;
         window.onSnapshot = onSnapshot;
-        window.initializePlayer = initializePlayer;
+        
+        // Update balance function
+        window.updateBalance = async function(newBalance) {
+            window.playerBalance = newBalance;
+            document.querySelector('.balance-amount').textContent = `$${window.playerBalance.toFixed(2)}`;
+            
+            try {
+                const username = checkLogin();
+                const playerRef = doc(db, "users", username);
+                await setDoc(playerRef, { balance: window.playerBalance }, { merge: true });
+            } catch (error) {
+                console.error("Error updating balance:", error);
+            }
+        };
 
         // Initialize player balance
+        window.initializePlayer = async function() {
+            const username = checkLogin();
+            const playerRef = doc(db, "users", username);
+            
+            try {
+                const docSnap = await getDoc(playerRef);
+                if (docSnap.exists()) {
+                    window.playerBalance = docSnap.data().balance;
+                } else {
+                    // If user document doesn't exist, redirect to login
+                    localStorage.removeItem('username');
+                    localStorage.removeItem('userId');
+                    window.location.href = '/login.html';
+                }
+                document.querySelector('.balance-amount').textContent = `$${window.playerBalance.toFixed(2)}`;
+                window.dispatchEvent(new Event('balanceInitialized'));
+            } catch (error) {
+                console.error("Error initializing player:", error);
+                window.location.href = '/login.html';
+            }
+        };
+
+        // Initialize on page load
         window.initializePlayer();
 
         // Online presence tracking
-        const deviceId = getDeviceId();
+        const deviceId = localStorage.getItem('username');
         const playerRef = ref(database, `online/${deviceId}`);
         const onlineRef = ref(database, 'online');
 
@@ -191,6 +200,7 @@
                     uniqueDevices.add(id);
                 }
             });
+            document.getElementById('onlinePlayers').textContent = uniqueDevices.size;
         });
 
         onValue(ref(database, '.info/connected'), (snapshot) => {

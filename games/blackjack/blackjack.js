@@ -28,18 +28,22 @@ class BlackjackGame {
     }
 
     setupBalanceListener() {
-        const deviceId = window.getDeviceId();
-        const playerRef = window.doc(window.db, "players", deviceId);
+        const username = localStorage.getItem('username');
+        if (!username) {
+            window.location.href = '/login.html';
+            return;
+        }
+        const playerRef = window.doc(window.db, "users", username);
         
         window.onSnapshot(playerRef, (doc) => {
             if (doc.exists()) {
                 window.playerBalance = doc.data().balance;
                 this.updateBalanceDisplay();
-                
-                // Update double button state if game is active
-                if (this.gameActive) {
-                    this.doubleButton.disabled = this.betAmount * 2 > window.playerBalance;
-                }
+            } else {
+                // If user document doesn't exist, redirect to login
+                localStorage.removeItem('username');
+                localStorage.removeItem('userId');
+                window.location.href = '/login.html';
             }
         });
     }

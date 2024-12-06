@@ -44,13 +44,22 @@ class MinesGame {
     }
 
     setupBalanceListener() {
-        const deviceId = window.getDeviceId();
-        const playerRef = doc(db, "players", deviceId);
+        const username = localStorage.getItem('username');
+        if (!username) {
+            window.location.href = '/login.html';
+            return;
+        }
+        const playerRef = window.doc(window.db, "users", username);
         
-        onSnapshot(playerRef, (doc) => {
+        window.onSnapshot(playerRef, (doc) => {
             if (doc.exists()) {
                 window.playerBalance = doc.data().balance;
                 this.updateBalanceDisplay();
+            } else {
+                // If user document doesn't exist, redirect to login
+                localStorage.removeItem('username');
+                localStorage.removeItem('userId');
+                window.location.href = '/login.html';
             }
         });
     }
