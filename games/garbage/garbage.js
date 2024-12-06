@@ -13,6 +13,17 @@ class GarbageGame {
         
         this.gamesPlayed = parseInt(localStorage.getItem('garbage_gamesPlayed')) || 0;
         this.gamesWon = parseInt(localStorage.getItem('garbage_gamesWon')) || 0;
+
+        // Add balance change listener
+        Object.defineProperty(window, 'playerBalance', {
+            get: function() {
+                return this._playerBalance;
+            },
+            set: function(newValue) {
+                this._playerBalance = newValue;
+                this.updateBalanceDisplay();
+            }.bind(this)
+        });
         
         if (typeof window.playerBalance === 'undefined') {
             window.addEventListener('balanceInitialized', () => {
@@ -41,8 +52,11 @@ class GarbageGame {
         
         window.onSnapshot(playerRef, (doc) => {
             if (doc.exists()) {
-                window.playerBalance = doc.data().balance;
-                this.updateBalanceDisplay();
+                const newBalance = doc.data().balance;
+                if (newBalance !== window.playerBalance) {
+                    window.playerBalance = newBalance;
+                    this.updateBalanceDisplay();
+                }
             } else {
                 // If user document doesn't exist, redirect to login
                 localStorage.removeItem('username');
@@ -433,7 +447,9 @@ class GarbageGame {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
-        document.querySelector('.balance-amount').textContent = `$${formattedBalance}`;
+        document.querySelectorAll('.balance-amount').forEach(element => {
+            element.textContent = `$${formattedBalance}`;
+        });
     }
 
     updateStats() {

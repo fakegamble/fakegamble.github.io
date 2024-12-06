@@ -35,6 +35,17 @@ class MinesGame {
             21: 76.00
         };
 
+        // Add balance change listener
+        Object.defineProperty(window, 'playerBalance', {
+            get: function() {
+                return this._playerBalance;
+            },
+            set: function(newValue) {
+                this._playerBalance = newValue;
+                this.updateBalanceDisplay();
+            }.bind(this)
+        });
+
         this.initializeDOM();
         this.initializeEventListeners();
         this.setupBalanceListener();
@@ -53,8 +64,11 @@ class MinesGame {
         
         window.onSnapshot(playerRef, (doc) => {
             if (doc.exists()) {
-                window.playerBalance = doc.data().balance;
-                this.updateBalanceDisplay();
+                const newBalance = doc.data().balance;
+                if (newBalance !== window.playerBalance) {
+                    window.playerBalance = newBalance;
+                    this.updateBalanceDisplay();
+                }
             } else {
                 // If user document doesn't exist, redirect to login
                 localStorage.removeItem('username');
@@ -288,14 +302,14 @@ class MinesGame {
     }
 
     updateBalanceDisplay() {
-        // Add default value of 0 if playerBalance is undefined
         const balance = window.playerBalance || 0;
-        // Format number with commas and 2 decimal places
         const formattedBalance = balance.toLocaleString('en-US', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
-        document.querySelector('.balance-amount').textContent = `$${formattedBalance}`;
+        document.querySelectorAll('.balance-amount').forEach(element => {
+            element.textContent = `$${formattedBalance}`;
+        });
     }
 
     adjustBet(multiplier) {

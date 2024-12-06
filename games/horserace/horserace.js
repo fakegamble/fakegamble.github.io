@@ -14,6 +14,17 @@ class HorseRaceGame {
             3: 4,
             4: 5
         };
+
+        // Add balance change listener
+        Object.defineProperty(window, 'playerBalance', {
+            get: function() {
+                return this._playerBalance;
+            },
+            set: function(newValue) {
+                this._playerBalance = newValue;
+                this.updateBalanceDisplay();
+            }.bind(this)
+        });
         
         if (typeof window.playerBalance === 'undefined') {
             window.addEventListener('balanceInitialized', () => {
@@ -27,8 +38,33 @@ class HorseRaceGame {
     initialize() {
         this.initializeDOM();
         this.initializeEventListeners();
-        this.updateStats();
+        this.setupBalanceListener();
         this.updateBalanceDisplay();
+        this.updateStats();
+    }
+
+    setupBalanceListener() {
+        const username = localStorage.getItem('username');
+        if (!username) {
+            window.location.href = '/login.html';
+            return;
+        }
+        const playerRef = window.doc(window.db, "users", username);
+        
+        window.onSnapshot(playerRef, (doc) => {
+            if (doc.exists()) {
+                const newBalance = doc.data().balance;
+                if (newBalance !== window.playerBalance) {
+                    window.playerBalance = newBalance;
+                    this.updateBalanceDisplay();
+                }
+            } else {
+                // If user document doesn't exist, redirect to login
+                localStorage.removeItem('username');
+                localStorage.removeItem('userId');
+                window.location.href = '/login.html';
+            }
+        });
     }
 
     initializeDOM() {
@@ -152,7 +188,9 @@ class HorseRaceGame {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
-        document.querySelector('.balance-amount').textContent = `$${formattedBalance}`;
+        document.querySelectorAll('.balance-amount').forEach(element => {
+            element.textContent = `$${formattedBalance}`;
+        });
     }
 
     adjustBet(multiplier) {

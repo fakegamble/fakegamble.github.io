@@ -9,6 +9,17 @@ class BlackjackGame {
         // Initialize games played and won from localStorage
         this.gamesPlayed = parseInt(localStorage.getItem('blackjack_gamesPlayed')) || 0;
         this.gamesWon = parseInt(localStorage.getItem('blackjack_gamesWon')) || 0;
+
+        // Add balance change listener
+        Object.defineProperty(window, 'playerBalance', {
+            get: function() {
+                return this._playerBalance;
+            },
+            set: function(newValue) {
+                this._playerBalance = newValue;
+                this.updateBalanceDisplay();
+            }.bind(this)
+        });
         
         if (typeof window.playerBalance === 'undefined') {
             window.addEventListener('balanceInitialized', () => {
@@ -37,8 +48,11 @@ class BlackjackGame {
         
         window.onSnapshot(playerRef, (doc) => {
             if (doc.exists()) {
-                window.playerBalance = doc.data().balance;
-                this.updateBalanceDisplay();
+                const newBalance = doc.data().balance;
+                if (newBalance !== window.playerBalance) {
+                    window.playerBalance = newBalance;
+                    this.updateBalanceDisplay();
+                }
             } else {
                 // If user document doesn't exist, redirect to login
                 localStorage.removeItem('username');
@@ -54,8 +68,7 @@ class BlackjackGame {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
-        const balanceElements = document.querySelectorAll('.balance-amount');
-        balanceElements.forEach(element => {
+        document.querySelectorAll('.balance-amount').forEach(element => {
             element.textContent = `$${formattedBalance}`;
         });
     }

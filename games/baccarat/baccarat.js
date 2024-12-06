@@ -7,6 +7,17 @@ class BaccaratGame {
         
         this.gamesPlayed = parseInt(localStorage.getItem('baccarat_gamesPlayed')) || 0;
         this.gamesWon = parseInt(localStorage.getItem('baccarat_gamesWon')) || 0;
+
+        // Add balance change listener
+        Object.defineProperty(window, 'playerBalance', {
+            get: function() {
+                return this._playerBalance;
+            },
+            set: function(newValue) {
+                this._playerBalance = newValue;
+                this.updateBalanceDisplay();
+            }.bind(this)
+        });
         
         if (typeof window.playerBalance === 'undefined') {
             window.addEventListener('balanceInitialized', () => {
@@ -52,7 +63,9 @@ class BaccaratGame {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
-        document.querySelector('.balance-amount').textContent = `$${formattedBalance}`;
+        document.querySelectorAll('.balance-amount').forEach(element => {
+            element.textContent = `$${formattedBalance}`;
+        });
     }
 
     initializeDOM() {
