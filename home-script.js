@@ -12,29 +12,6 @@ class GameHub {
             this.startCooldownTimer();
         }
         this.initializeHeaderScroll();
-        
-        this.setupBalanceListener();
-    }
-
-    setupBalanceListener() {
-        const username = localStorage.getItem('username');
-        if (!username) {
-            window.location.href = '/login.html';
-            return;
-        }
-        const playerRef = doc(db, "users", username);
-        
-        onSnapshot(playerRef, (doc) => {
-            if (doc.exists()) {
-                this.balance = doc.data().balance;
-                this.updateBalanceDisplay();
-            } else {
-                // If user document doesn't exist, redirect to login
-                localStorage.removeItem('username');
-                localStorage.removeItem('userId');
-                window.location.href = '/login.html';
-            }
-        });
     }
 
     initializeUI() {
@@ -69,10 +46,18 @@ class GameHub {
 
     updateBalanceDisplay() {
         const balanceElement = document.querySelector('.balance-amount');
-        balanceElement.textContent = this.formatLargeNumber(this.balance);
+        if (!balanceElement) return;
         
+        const currentBalance = window.playerBalance || this.balance;
+        balanceElement.textContent = this.formatLargeNumber(currentBalance);
+        
+        balanceElement.classList.remove('balance-update');
+        void balanceElement.offsetWidth;
         balanceElement.classList.add('balance-update');
-        setTimeout(() => balanceElement.classList.remove('balance-update'), 500);
+        
+        setTimeout(() => {
+            balanceElement.classList.remove('balance-update');
+        }, 500);
     }
 
     updateAddMoneyButton() {
@@ -132,7 +117,7 @@ class GameHub {
             }
             
             try {
-                await window.updateBalance('+1000');
+                await window.updateBalance(this.balance + amount);
                 
                 this.lastAddMoney = Date.now();
                 localStorage.setItem('lastAddMoney', this.lastAddMoney);
@@ -162,7 +147,6 @@ class GameHub {
             if (timeLeft <= 0) {
                 clearInterval(this.cooldownTimer);
                 this.showNotification('You can add money again!', 'info');
-                // Save the current time as the last add money time
                 this.lastAddMoney = Date.now();
                 localStorage.setItem('lastAddMoney', this.lastAddMoney);
             }
