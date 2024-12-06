@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta property="og:title" content="Fake Gamble - Horse Racing">
+    <meta property="og:description" content="Play free casino games with virtual currency. No real money involved, just pure entertainment!">
+    <meta property="og:image" content="/assets/favicon.png">
+    <meta property="og:url" content="https://fakegamble.github.io/">
+    <meta property="og:type" content="website">
+    <title>Fake Gamble | Horse Racing</title>
+    <link rel="stylesheet" href="horserace.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f172a">
+</head>
+<body>
+    <div class="game-wrapper">
+        <div class="sidebar">
+            <div class="sidebar-top">
+                <div class="bet-panel">
+                    <div class="amount-control">
+                        <label>Bet Amount</label>
+                        <div class="amount-input">
+                            <input type="number" id="betAmount" value="1.00" step="0.01">
+                            <div class="amount-modifiers">
+                                <button class="modifier-btn half-btn">½</button>
+                                <button class="modifier-btn double-btn">2×</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="horse-selection">
+                        <label>Select Horse</label>
+                        <div class="horse-buttons">
+                            <button class="horse-btn" data-horse="1">Horse 1 (2x)</button>
+                            <button class="horse-btn" data-horse="2">Horse 2 (3x)</button>
+                            <button class="horse-btn" data-horse="3">Horse 3 (4x)</button>
+                            <button class="horse-btn" data-horse="4">Horse 4 (5x)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="actionButton" class="action-btn">Place Bet</button>
+
+                <div class="balance-display">
+                    <span class="balance-label">Balance</span>
+                    <span class="balance-amount">$100.00</span>
+                </div>
+
+                <div class="game-info">
+                    <div class="win-rate">
+                        <span class="win-rate-label">Win Rate</span>
+                        <span class="win-rate-value">0.0%</span>
+                    </div>
+                    <div class="total-played">
+                        <span class="total-played-label">Games Played</span>
+                        <span class="total-played-value">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="race-track">
+                <div class="track-lane" data-horse="1">
+                    <div class="horse">🐎</div>
+                    <div class="finish-line"></div>
+                </div>
+                <div class="track-lane" data-horse="2">
+                    <div class="horse">🐎</div>
+                    <div class="finish-line"></div>
+                </div>
+                <div class="track-lane" data-horse="3">
+                    <div class="horse">🐎</div>
+                    <div class="finish-line"></div>
+                </div>
+                <div class="track-lane" data-horse="4">
+                    <div class="horse">🐎</div>
+                    <div class="finish-line"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="result-overlay">
+            <div class="result-content">
+                <div class="result-text">Win!</div>
+                <div class="result-amount">$10.00</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase initialization -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js" type="module"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { 
+            getFirestore, 
+            doc, 
+            setDoc, 
+            getDoc,
+            onSnapshot 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getDatabase, ref, onValue, onDisconnect, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const _0x3f8b2c = {
+            _k: 'QWlhU3lCV1N2Q1VnbGw4T2NvdWJDaTBHZUF2Vm5DV18zYkVzV3c=',
+            _d: 'dmlld3MtZDBiM2Iud2ViLmFwcA==',
+            _u: 'aHR0cHM6Ly92aWV3cy1kMGIzYi1kZWZhdWx0LXJ0ZGIuZmlyZWJhc2Vpby5jb20=',
+            _p: 'dmlld3MtZDBiM2I=',
+            _s: 'dmlld3MtZDBiM2IuZmlyZWJhc2VzdG9yYWdlLmFwcA==',
+            _m: 'Mjc4NTU0MTAwOTc=',
+            _a: 'MToyNzg1NTQxMDA5Nzp3ZWI6MDJlN2E0OWEwMWJlMTBkZGMzMjM5MA==',
+            _t: 'Ry01RFBEWllEUkZK'
+        };
+
+        const firebaseConfig = {
+            apiKey: atob(_0x3f8b2c._k),
+            authDomain: atob(_0x3f8b2c._d),
+            databaseURL: atob(_0x3f8b2c._u),
+            projectId: atob(_0x3f8b2c._p),
+            storageBucket: atob(_0x3f8b2c._s),
+            messagingSenderId: atob(_0x3f8b2c._m),
+            appId: atob(_0x3f8b2c._a),
+            measurementId: atob(_0x3f8b2c._t)
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const database = getDatabase(app);
+
+        // Generate or get device ID
+        function getDeviceId() {
+            let deviceId = localStorage.getItem('deviceId');
+            if (!deviceId) {
+                deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('deviceId', deviceId);
+            }
+            return deviceId;
+        }
+
+        // Update balance function
+        async function updateBalance(newBalance) {
+            const deviceId = getDeviceId();
+            const playerRef = doc(db, "players", deviceId);
+            await setDoc(playerRef, { balance: newBalance }, { merge: true });
+            return newBalance;
+        }
+
+        // Initialize player function
+        async function initializePlayer() {
+            const deviceId = getDeviceId();
+            const playerRef = doc(db, "players", deviceId);
+            const playerDoc = await getDoc(playerRef);
+            
+            if (!playerDoc.exists()) {
+                await setDoc(playerRef, { balance: 100 }); // Default starting balance
+                window.playerBalance = 100;
+            } else {
+                window.playerBalance = playerDoc.data().balance;
+            }
+            
+            // Dispatch event when balance is initialized
+            window.dispatchEvent(new Event('balanceInitialized'));
+        }
+
+        // Make everything globally available
+        window.db = db;
+        window.doc = doc;
+        window.getDeviceId = getDeviceId;
+        window.updateBalance = updateBalance;
+        window.onSnapshot = onSnapshot;
+        window.initializePlayer = initializePlayer;
+
+        // Initialize player balance
+        window.initializePlayer();
+
+        // Online presence tracking
+        const deviceId = getDeviceId();
+        const playerRef = ref(database, `online/${deviceId}`);
+        const onlineRef = ref(database, 'online');
+
+        onValue(onlineRef, (snapshot) => {
+            const onlinePlayers = snapshot.val() || {};
+            const uniqueDevices = new Set();
+            Object.entries(onlinePlayers).forEach(([id, status]) => {
+                if (status.online) {
+                    uniqueDevices.add(id);
+                }
+            });
+        });
+
+        onValue(ref(database, '.info/connected'), (snapshot) => {
+            if (snapshot.val() === true && deviceId) {
+                onDisconnect(playerRef).remove();
+                set(playerRef, {
+                    online: true,
+                    lastSeen: serverTimestamp()
+                });
+            }
+        });
+    </script>
+    <script src="horserace.js"></script>
+</body>
+</html>
