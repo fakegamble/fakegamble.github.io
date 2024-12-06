@@ -187,9 +187,17 @@
         });
 
         // Check if user is already logged in
-        const userId = localStorage.getItem('userId');
-        if (userId) {
-            window.location.href = '/';
+        const username = localStorage.getItem('username');
+        if (username) {
+            // Verify user exists in database before redirecting
+            const userDoc = await getDoc(doc(db, "users", username));
+            if (userDoc.exists()) {
+                window.location.href = '/';
+            } else {
+                // Clear invalid credentials
+                localStorage.removeItem('username');
+                localStorage.removeItem('userId');
+            }
         }
     </script>
 </body>
