@@ -132,7 +132,7 @@ class GameHub {
             }
             
             try {
-                await window.updateBalance(this.balance + amount);
+                await window.updateBalance('+1000');
                 
                 this.lastAddMoney = Date.now();
                 localStorage.setItem('lastAddMoney', this.lastAddMoney);
