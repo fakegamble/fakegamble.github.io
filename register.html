@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | Fake Gamble</title>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .register-container {
+            background: #1e293b;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #4f46e5;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #94a3b8;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #334155;
+            border-radius: 5px;
+            background: #0f172a;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+
+        button:hover {
+            background: #4338ca;
+        }
+
+        .error {
+            color: #ef4444;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .success {
+            color: #22c55e;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .login-link a {
+            color: #4f46e5;
+            text-decoration: none;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .password-requirements {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <h1>Create Account</h1>
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" required minlength="3" maxlength="20">
+                <div class="password-requirements">
+                    3-20 characters, letters and numbers only
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required minlength="6">
+                <div class="password-requirements">
+                    Minimum 6 characters
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" required>
+            </div>
+            
+            <div id="errorMessage" class="error" style="display: none;"></div>
+            <div id="successMessage" class="success" style="display: none;"></div>
+            
+            <button type="submit">Create Account</button>
+        </form>
+        
+        <div class="login-link">
+            Already have an account? <a href="login.html">Login here</a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getDatabase } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { AuthManager } from './auth.js';
+
+        const _0x3f8b2c = {
+            _k: 'QWlhU3lCV1N2Q1VnbGw4T2NvdWJDaTBHZUF2Vm5DV18zYkVzV3c=',
+            _d: 'dmlld3MtZDBiM2Iud2ViLmFwcA==',
+            _u: 'aHR0cHM6Ly92aWV3cy1kMGIzYi1kZWZhdWx0LXJ0ZGIuZmlyZWJhc2Vpby5jb20=',
+            _p: 'dmlld3MtZDBiM2I=',
+            _s: 'dmlld3MtZDBiM2IuZmlyZWJhc2VzdG9yYWdlLmFwcA==',
+            _m: 'Mjc4NTU0MTAwOTc=',
+            _a: 'MToyNzg1NTQxMDA5Nzp3ZWI6MDJlN2E0OWEwMWJlMTBkZGMzMjM5MA==',
+            _t: 'Ry01RFBEWllEUkZK'
+        };
+
+        const firebaseConfig = {
+            apiKey: atob(_0x3f8b2c._k),
+            authDomain: atob(_0x3f8b2c._d),
+            databaseURL: atob(_0x3f8b2c._u),
+            projectId: atob(_0x3f8b2c._p),
+            storageBucket: atob(_0x3f8b2c._s),
+            messagingSenderId: atob(_0x3f8b2c._m),
+            appId: atob(_0x3f8b2c._a),
+            measurementId: atob(_0x3f8b2c._t)
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const database = getDatabase(app);
+        const auth = new AuthManager();
+
+        const registerForm = document.getElementById('registerForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+        }
+
+        function validateUsername(username) {
+            return /^[a-zA-Z0-9]{3,20}$/.test(username);
+        }
+
+        function hashPassword(password) {
+            // In a real application, use a proper password hashing algorithm
+            return btoa(password);
+        }
+
+        const profanityFilter = {
+            // Direct profanity list (add more as needed)
+            badWords: [
+                'fuck', 'shit', 'ass', 'bitch', 'dick', 'pussy', 'cock', 'whore', 'slut',
+                'nigger', 'nigga', 'faggot', 'cunt', 'penis', 'vagina', 'porn'
+            ],
+            
+            // Common letter substitutions
+            substitutions: {
+                'a': ['@', '4', 'α', 'а', 'λ'],
+                'b': ['8', '6', 'β', 'б'],
+                'e': ['3', '€', 'е', 'ε'],
+                'i': ['1', '!', '|', 'і', 'ι'],
+                'l': ['1', '|', 'і', 'ι'],
+                'o': ['0', 'θ', 'о', 'σ'],
+                's': ['5', '$', 'ѕ', 'š'],
+                't': ['7', '+', 'т'],
+                'u': ['υ', 'и', 'μ'],
+                'v': ['ν', 'v'],
+                'x': ['×', 'х'],
+                'y': ['ү', 'у', 'γ']
+            },
+
+            // Normalize text by replacing common substitutions
+            normalizeText(text) {
+                let normalized = text.toLowerCase();
+                
+                // Replace all possible substitutions with their base letter
+                Object.entries(this.substitutions).forEach(([letter, subs]) => {
+                    subs.forEach(sub => {
+                        normalized = normalized.replace(new RegExp(sub, 'g'), letter);
+                    });
+                });
+
+                // Remove common separator characters (escape the hyphen properly)
+                normalized = normalized.replace(/[._\-\s]/g, '');
+                
+                // Remove repeated letters (e.g., "fuccck" -> "fuck")
+                normalized = normalized.replace(/(.)\1+/g, '$1');
+
+                return normalized;
+            },
+
+            // Check if text contains profanity
+            hasProfanity(text) {
+                const normalized = this.normalizeText(text);
+                
+                // Check for exact matches and substring matches
+                return this.badWords.some(word => {
+                    const normalizedBadWord = this.normalizeText(word);
+                    return normalized.includes(normalizedBadWord);
+                });
+            },
+
+            // Suggest a clean version of the username
+            suggestCleanUsername(username) {
+                if (!this.hasProfanity(username)) return username;
+                
+                // Replace detected profanity with asterisks
+                let cleaned = username;
+                this.badWords.forEach(word => {
+                    const regex = new RegExp(word, 'gi');
+                    cleaned = cleaned.replace(regex, '*'.repeat(word.length));
+                });
+                return cleaned;
+            }
+        };
+
+        // Add real-time username checking (optional)
+        document.getElementById('username').addEventListener('input', (e) => {
+            const username = e.target.value.toLowerCase();
+            
+            if (profanityFilter.hasProfanity(username)) {
+                showError('This username contains inappropriate content');
+            } else {
+                errorMessage.style.display = 'none';
+            }
+        });
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.toLowerCase();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            // Reset messages
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+
+            try {
+                // Check for profanity first
+                if (profanityFilter.hasProfanity(username)) {
+                    throw new Error('Username contains inappropriate content. Please choose a different username.');
+                }
+
+                // Validate username format
+                if (!validateUsername(username)) {
+                    throw new Error('Username must be 3-20 characters and contain only letters and numbers');
+                }
+
+                // Validate password
+                if (password.length < 6) {
+                    throw new Error('Password must be at least 6 characters');
+                }
+
+                // Check if passwords match
+                if (password !== confirmPassword) {
+                    throw new Error('Passwords do not match');
+                }
+
+                // Check if username exists
+                const userRef = doc(db, "users", username);
+                const userDoc = await getDoc(userRef);
+
+                if (userDoc.exists()) {
+                    throw new Error('Username already taken');
+                }
+
+                // Create user document
+                // First create user document
+                await setDoc(userRef, {
+                    username: username,
+                    displayName: username,
+                    password: hashPassword(password),
+                    createdAt: new Date().toISOString()
+                });
+
+                // Then create initial player document with deviceId
+                const playerRef = doc(db, "players", username);
+                await setDoc(playerRef, { 
+                    balance: 100
+                });
+
+                showSuccess('Account created successfully! Redirecting to login...');
+                
+                // Clear form
+                registerForm.reset();
+
+                // Redirect to login page after 2 seconds
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+
+            } catch (error) {
+                showError(error.message);
+            }
+        });
+    </script>
+</body>
+</html>

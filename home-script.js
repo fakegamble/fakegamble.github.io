@@ -17,12 +17,17 @@ class GameHub {
     }
 
     setupBalanceListener() {
-        const deviceId = window.getDeviceId();
-        const playerRef = doc(db, "players", deviceId);
+        const userData = JSON.parse(localStorage.getItem('userData'));
+        if (!userData || !userData.username) {
+            window.location.href = '/login.html';
+            return;
+        }
         
-        onSnapshot(playerRef, (doc) => {
+        const userRef = window.doc(window.db, "users", userData.username);
+        
+        window.onSnapshot(userRef, (doc) => {
             if (doc.exists()) {
-                this.balance = doc.data().balance;
+                window.playerBalance = doc.data().balance;
                 this.updateBalanceDisplay();
             }
         });
@@ -47,7 +52,8 @@ class GameHub {
     }
 
     initializeWelcomeMessage() {
-        const username = localStorage.getItem('username') || 'Player';
+        const userData = JSON.parse(localStorage.getItem('userData'));
+        const username = userData?.username || 'Player';
         const mainContent = document.querySelector('.main-content');
         const welcomeDiv = document.createElement('div');
         welcomeDiv.className = 'welcome-message';
@@ -115,10 +121,18 @@ class GameHub {
             }
 
             const amount = 1000;
-            const deviceId = window.getDeviceId();
             
             try {
-                await window.updateBalance(this.balance + amount);
+                const userData = JSON.parse(localStorage.getItem('userData'));
+                if (!userData || !userData.username) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                const userRef = window.doc(window.db, "users", userData.username);
+                await window.setDoc(userRef, { 
+                    balance: window.playerBalance + amount 
+                }, { merge: true });
                 
                 this.lastAddMoney = Date.now();
                 localStorage.setItem('lastAddMoney', this.lastAddMoney);
@@ -148,7 +162,6 @@ class GameHub {
             if (timeLeft <= 0) {
                 clearInterval(this.cooldownTimer);
                 this.showNotification('You can add money again!', 'info');
-                // Save the current time as the last add money time
                 this.lastAddMoney = Date.now();
                 localStorage.setItem('lastAddMoney', this.lastAddMoney);
             }
@@ -348,3 +361,7 @@ class GameHub {
 document.addEventListener('DOMContentLoaded', () => {
     window.gameHub = new GameHub();
 });
+
+function hashPassword(password) {
+    return btoa(password); // Basic encoding for demo purposes
+}
