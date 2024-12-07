@@ -144,102 +144,120 @@
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getDatabase, ref, onValue, onDisconnect, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        const _0x3f8b2c = {
-            _k: 'QWlhU3lCV1N2Q1VnbGw4T2NvdWJDaTBHZUF2Vm5DV18zYkVzV3c=',
-            _d: 'dmlld3MtZDBiM2Iud2ViLmFwcA==',
-            _u: 'aHR0cHM6Ly92aWV3cy1kMGIzYi1kZWZhdWx0LXJ0ZGIuZmlyZWJhc2Vpby5jb20=',
-            _p: 'dmlld3MtZDBiM2I=',
-            _s: 'dmlld3MtZDBiM2IuZmlyZWJhc2VzdG9yYWdlLmFwcA==',
-            _m: 'Mjc4NTU0MTAwOTc=',
-            _a: 'MToyNzg1NTQxMDA5Nzp3ZWI6MDJlN2E0OWEwMWJlMTBkZGMzMjM5MA==',
-            _t: 'Ry01RFBEWllEUkZK'
-        };
-
         const firebaseConfig = {
-            apiKey: atob(_0x3f8b2c._k),
-            authDomain: atob(_0x3f8b2c._d),
-            databaseURL: atob(_0x3f8b2c._u),
-            projectId: atob(_0x3f8b2c._p),
-            storageBucket: atob(_0x3f8b2c._s),
-            messagingSenderId: atob(_0x3f8b2c._m),
-            appId: atob(_0x3f8b2c._a),
-            measurementId: atob(_0x3f8b2c._t)
+            apiKey: "AIzaSyBWSvCUgql8OcoubCi0GeAvVnCW_3bEsWw",
+            authDomain: "views-d0b3b.firebaseapp.com",
+            databaseURL: "https://views-d0b3b-default-rtdb.firebaseio.com",
+            projectId: "views-d0b3b",
+            storageBucket: "views-d0b3b.appspot.com",
+            messagingSenderId: "27855410097",
+            appId: "1:27855410097:web:02e7a49a01be10ddc32390",
+            measurementId: "G-5DPDZYDRFJ"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const database = getDatabase(app);
 
-        // Generate or get device ID
-        function getDeviceId() {
-            let deviceId = localStorage.getItem('deviceId');
-            if (!deviceId) {
-                deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
-                localStorage.setItem('deviceId', deviceId);
-            }
-            return deviceId;
-        }
-
-        // Update balance function
-        async function updateBalance(newBalance) {
-            const deviceId = getDeviceId();
-            const playerRef = doc(db, "players", deviceId);
-            await setDoc(playerRef, { balance: newBalance }, { merge: true });
-            return newBalance;
-        }
-
-        // Initialize player function
-        async function initializePlayer() {
-            const deviceId = getDeviceId();
-            const playerRef = doc(db, "players", deviceId);
-            const playerDoc = await getDoc(playerRef);
-            
-            if (!playerDoc.exists()) {
-                await setDoc(playerRef, { balance: 100 }); // Default starting balance
-                window.playerBalance = 100;
-            } else {
-                window.playerBalance = playerDoc.data().balance;
-            }
-            
-            // Dispatch event when balance is initialized
-            window.dispatchEvent(new Event('balanceInitialized'));
-        }
-
         // Make everything globally available
         window.db = db;
         window.doc = doc;
-        window.getDeviceId = getDeviceId;
-        window.updateBalance = updateBalance;
+        window.getDoc = getDoc;
+        window.setDoc = setDoc;
         window.onSnapshot = onSnapshot;
-        window.initializePlayer = initializePlayer;
 
         // Initialize player balance
+        window.initializePlayer = async function() {
+            const username = localStorage.getItem('username');
+            if (!username) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            const playerRef = doc(db, "users", username);
+            try {
+                const docSnap = await getDoc(playerRef);
+                if (docSnap.exists()) {
+                    window.playerBalance = docSnap.data().balance;
+                } else {
+                    localStorage.removeItem('username');
+                    window.location.href = '/login.html';
+                    return;
+                }
+                document.querySelector('.balance-amount').textContent = `$${window.playerBalance.toFixed(2)}`;
+                window.dispatchEvent(new Event('balanceInitialized'));
+            } catch (error) {
+                console.error("Error initializing player:", error);
+                window.location.href = '/login.html';
+            }
+        };
+
+        window.updateBalance = async function(newBalance) {
+            const username = localStorage.getItem('username');
+            if (!username) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            window.playerBalance = newBalance;
+            document.querySelector('.balance-amount').textContent = `$${window.playerBalance.toFixed(2)}`;
+            
+            try {
+                const playerRef = doc(db, "users", username);
+                await setDoc(playerRef, { balance: window.playerBalance }, { merge: true });
+            } catch (error) {
+                console.error("Error updating balance:", error);
+            }
+        };
+
+        // Initialize on page load
         window.initializePlayer();
 
         // Online presence tracking
-        const deviceId = getDeviceId();
-        const playerRef = ref(database, `online/${deviceId}`);
-        const onlineRef = ref(database, 'online');
+        const username = localStorage.getItem('username');
+        if (username) {
+            const playerRef = ref(database, `online/${username}`);
+            const onlineRef = ref(database, 'online');
 
-        onValue(onlineRef, (snapshot) => {
-            const onlinePlayers = snapshot.val() || {};
-            const uniqueDevices = new Set();
-            Object.entries(onlinePlayers).forEach(([id, status]) => {
-                if (status.online) {
-                    uniqueDevices.add(id);
+            // Create a hidden div for online count if it doesn't exist
+            let onlinePlayersElement = document.getElementById('onlinePlayers');
+            if (!onlinePlayersElement) {
+                onlinePlayersElement = document.createElement('span');
+                onlinePlayersElement.id = 'onlinePlayers';
+                onlinePlayersElement.style.display = 'none';
+                document.body.appendChild(onlinePlayersElement);
+            }
+
+            // Track online players
+            onValue(onlineRef, (snapshot) => {
+                const onlinePlayers = snapshot.val() || {};
+                const uniqueUsers = new Set();
+                
+                Object.entries(onlinePlayers).forEach(([id, status]) => {
+                    if (status.online) {
+                        uniqueUsers.add(id);
+                    }
+                });
+                
+                if (onlinePlayersElement) {
+                    onlinePlayersElement.textContent = uniqueUsers.size;
                 }
             });
-        });
 
-        onValue(ref(database, '.info/connected'), (snapshot) => {
-            if (snapshot.val() === true && deviceId) {
-                onDisconnect(playerRef).remove();
-                set(playerRef, {
-                    online: true,
-                    lastSeen: serverTimestamp()
-                });
-            }
-        });
+            // Update presence on connection state change
+            onValue(ref(database, '.info/connected'), (snapshot) => {
+                if (snapshot.val() === true) {
+                    // Remove presence on disconnect
+                    onDisconnect(playerRef).remove();
+                    
+                    // Set presence
+                    set(playerRef, {
+                        online: true,
+                        lastSeen: serverTimestamp()
+                    });
+                }
+            });
+        }
     </script>
     <script src="mines.js"></script>
 </body>

@@ -35,12 +35,22 @@ class MinesGame {
             21: 76.00
         };
 
+        if (typeof window.playerBalance === 'undefined') {
+            window.addEventListener('balanceInitialized', () => {
+                this.initialize();
+            });
+        } else {
+            this.initialize();
+        }
+
+        window.addmoney = (amount) => this.addMoney(amount);
+    }
+
+    initialize() {
         this.initializeDOM();
         this.initializeEventListeners();
         this.setupBalanceListener();
         this.updateBalanceDisplay();
-
-        window.addmoney = (amount) => this.addMoney(amount);
     }
 
     setupBalanceListener() {
@@ -49,15 +59,15 @@ class MinesGame {
             window.location.href = '/login.html';
             return;
         }
-
-        const playerRef = doc(db, "users", username);
-        onSnapshot(playerRef, (doc) => {
+        
+        const playerRef = window.doc(window.db, "users", username);
+        
+        window.onSnapshot(playerRef, (doc) => {
             if (doc.exists()) {
                 window.playerBalance = doc.data().balance;
                 this.updateBalanceDisplay();
             } else {
                 localStorage.removeItem('username');
-                localStorage.removeItem('userId');
                 window.location.href = '/login.html';
             }
         });
@@ -144,22 +154,33 @@ class MinesGame {
             return;
         }
 
-        window.playerBalance -= this.betAmount;
-        await window.updateBalance(window.playerBalance);
-        this.gameActive = true;
-        this.revealed.clear();
-        this.currentProfit = 0;
-        this.placeMines();
-        this.updateUI();
-        
-        this.actionButton.textContent = 'Cash Out';
-        this.actionButton.classList.add('cashout');
-        
-        this.betInput.disabled = true;
-        this.minesSelect.disabled = true;
-        document.querySelector('.half-btn').disabled = true;
-        document.querySelector('.double-btn').disabled = true;
-        document.querySelector('[data-mode="auto"]').disabled = true;
+        try {
+            // Deduct bet amount and update Firebase immediately
+            window.playerBalance -= this.betAmount;
+            await window.updateBalance(window.playerBalance);
+            this.updateBalanceDisplay();
+            
+            this.gameActive = true;
+            this.revealed.clear();
+            this.currentProfit = 0;
+            this.placeMines();
+            this.updateUI();
+            
+            this.actionButton.textContent = 'Cash Out';
+            this.actionButton.classList.add('cashout');
+            
+            this.betInput.disabled = true;
+            this.minesSelect.disabled = true;
+            document.querySelector('.half-btn').disabled = true;
+            document.querySelector('.double-btn').disabled = true;
+            document.querySelector('[data-mode="auto"]').disabled = true;
+        } catch (error) {
+            console.error("Error starting game:", error);
+            this.showResult('Error', 'Failed to start game', true);
+            // Revert balance if update failed
+            window.playerBalance += this.betAmount;
+            this.updateBalanceDisplay();
+        }
     }
 
     placeMines() {
@@ -172,31 +193,52 @@ class MinesGame {
         }
     }
 
-    handleCellClick(index) {
-        if (!this.gameActive) {
-            this.showResult('Game Not Started', 'Press Play to start the game', true);
-            return;
-        }
+    async handleCellClick(position) {
+        if (!this.gameActive || this.revealed.has(position)) return;
 
-        if (this.revealed.has(index)) return;
-
-        const cell = this.gameGrid.children[index];
-        
-        if (this.mines.includes(index)) {
+        if (this.mines.includes(position)) {
             this.gameActive = false;
-            cell.classList.add('mine');
-            this.gameOver(false);
+            this.revealAllMines();
+            this.showResult('Game Over!', `-$${this.betAmount.toFixed(2)}`);
+            this.endGame();
             return;
         }
 
-        this.revealed.add(index);
+        this.revealed.add(position);
+        const cell = document.querySelector(`[data-index="${position}"]`);
         cell.classList.add('revealed');
+
+        const revealedCount = this.revealed.size;
+        const multiplier = this.calculateMultiplier(revealedCount);
+        this.currentProfit = (this.betAmount * multiplier) - this.betAmount;
         
-        this.updateProfit();
         this.updateUI();
+
+        if (revealedCount === this.totalTiles - this.mines.length) {
+            await this.cashOut();
+        }
+    }
+
+    async cashOut() {
+        if (!this.gameActive) return;
         
-        if (this.revealed.size === this.totalTiles - this.mineCount) {
-            this.gameOver(true);
+        const profit = this.currentProfit;
+        this.gameActive = false;
+        
+        try {
+            // Add winnings to balance and update Firebase immediately
+            window.playerBalance += (this.betAmount + profit);
+            await window.updateBalance(window.playerBalance);
+            this.updateBalanceDisplay();
+            
+            this.showResult('Winner!', `+$${profit.toFixed(2)}`);
+            this.endGame();
+        } catch (error) {
+            console.error("Error cashing out:", error);
+            this.showResult('Error', 'Failed to cash out', true);
+            // Revert balance if update failed
+            window.playerBalance -= (this.betAmount + profit);
+            this.updateBalanceDisplay();
         }
     }
 
@@ -209,49 +251,6 @@ class MinesGame {
         const safeSpots = this.totalTiles - this.mineCount;
         const baseMultiplier = this.totalTiles / safeSpots;
         return 1 + (baseMultiplier - 1) * 0.95;
-    }
-
-    async cashOut() {
-        if (!this.gameActive) return;
-        
-        const username = localStorage.getItem('username');
-        if (!username) {
-            window.location.href = '/login.html';
-            return;
-        }
-        
-        window.playerBalance += this.currentProfit;
-        await window.updateBalance(window.playerBalance);
-        
-        this.mines.forEach(index => {
-            const cell = this.gameGrid.children[index];
-            cell.classList.add('mine');
-        });
-        
-        this.showResult('Success!', `+$${this.currentProfit.toFixed(2)}`);
-        this.endGame();
-    }
-
-    async gameOver(won) {
-        this.gameActive = false;
-        
-        const username = localStorage.getItem('username');
-        if (!username) {
-            window.location.href = '/login.html';
-            return;
-        }
-        
-        this.mines.forEach(index => {
-            const cell = this.gameGrid.children[index];
-            cell.classList.add('mine');
-        });
-
-        if (!won) {
-            this.showResult('Game Over', `-$${this.betAmount.toFixed(2)}`);
-            await window.updateBalance(window.playerBalance);
-        }
-
-        this.endGame();
     }
 
     endGame() {

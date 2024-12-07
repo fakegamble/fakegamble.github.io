@@ -27,6 +27,7 @@ class HorseRaceGame {
     initialize() {
         this.initializeDOM();
         this.initializeEventListeners();
+        this.setupBalanceListener();
         this.updateStats();
         this.updateBalanceDisplay();
     }
@@ -55,6 +56,26 @@ class HorseRaceGame {
         });
     }
 
+    setupBalanceListener() {
+        const username = localStorage.getItem('username');
+        if (!username) {
+            window.location.href = '/login.html';
+            return;
+        }
+        
+        const playerRef = window.doc(window.db, "users", username);
+        
+        window.onSnapshot(playerRef, (doc) => {
+            if (doc.exists()) {
+                window.playerBalance = doc.data().balance;
+                this.updateBalanceDisplay();
+            } else {
+                localStorage.removeItem('username');
+                window.location.href = '/login.html';
+            }
+        });
+    }
+
     async startRace() {
         if (this.gameActive || !this.selectedHorse) return;
         if (this.betAmount <= 0 || this.betAmount > window.playerBalance) {
@@ -66,13 +87,7 @@ class HorseRaceGame {
         window.playerBalance -= this.betAmount;
         await window.updateBalance(window.playerBalance);
         this.updateBalanceDisplay();
-        
-        // Disable all betting controls
         this.actionButton.disabled = true;
-        this.betInput.disabled = true;
-        this.horseButtons.forEach(btn => btn.disabled = true);
-        document.querySelector('.half-btn').disabled = true;
-        document.querySelector('.double-btn').disabled = true;
 
         // Reset horses to starting position
         this.horses.forEach(horse => {
@@ -106,13 +121,7 @@ class HorseRaceGame {
     async endRace(winningHorse) {
         this.gamesPlayed++;
         this.gameActive = false;
-        
-        // Re-enable all betting controls
         this.actionButton.disabled = false;
-        this.betInput.disabled = false;
-        this.horseButtons.forEach(btn => btn.disabled = false);
-        document.querySelector('.half-btn').disabled = false;
-        document.querySelector('.double-btn').disabled = false;
 
         if (winningHorse === this.selectedHorse) {
             this.gamesWon++;
