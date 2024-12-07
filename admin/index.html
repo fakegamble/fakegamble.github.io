@@ -146,7 +146,9 @@
             color: var(--text-primary);
             padding: 0.75rem 1rem;
             font-size: 0.875rem;
-            width: 150px;
+            width: 100%;
+            box-sizing: border-box;
+            max-width: 100%;
             transition: var(--transition);
         }
     
@@ -409,7 +411,7 @@
     border-radius: 50%;
     background-color: var(--success);
     animation: pulse 2s infinite;
-    margin-top: 2px;  /* Add a small margin to visually center with text */
+    margin-bottom: 4px;  /* Add a small margin to visually center with text */
 }
 
 @keyframes pulse {
@@ -448,13 +450,16 @@
 .btn-vip {
     background: linear-gradient(135deg, #fbbf24, #d97706);
     color: white;
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
     border: none;
     border-radius: var(--border-radius);
-    font-size: 0.75rem;
-    font-weight: 600;
     cursor: pointer;
     transition: var(--transition);
+    white-space: nowrap;
+    min-width: 140px;
+    text-align: center;
 }
 
 .btn-vip:hover {
@@ -464,6 +469,33 @@
 
 .btn-vip.active {
     background: linear-gradient(135deg, #059669, #10b981);
+}
+
+.btn-vip.active:hover {
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+.input-group {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 1rem;
+    align-items: start;
+}
+
+.input-group input {
+    min-width: 150px;
+}
+
+@media (max-width: 768px) {
+    .input-group {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .btn, .btn-vip {
+        width: 100%;
+        min-width: unset;
+    }
 }
     </style>
 </head>
@@ -547,26 +579,33 @@
         const onlineRef = ref(database, 'online');
 
         function formatLargeNumber(num) {
-            const abbreviations = {
-                33: 'Tg', 32: 'Nnvg', 31: 'Ocvg', 30: 'Spvg', 29: 'Sxvg', 28: 'Qivg',
-                27: 'Qvg', 26: 'Tvg', 25: 'Dvg', 24: 'Uvg', 23: 'Vg', 22: 'Nnd',
-                21: 'Ocd', 20: 'Spd', 19: 'Sxd', 18: 'Qi', 17: 'Qd', 16: 'Td',
-                15: 'Dd', 14: 'Ud', 13: 'Dc', 12: 'Nn', 11: 'Oc', 10: 'Sp',
-                9: 'Sx', 8: 'Qn', 7: 'q'
-            };
+            const abbreviations = [
+                { value: 1e51, symbol: 'QVn+' },
+                { value: 1e48, symbol: 'QV+' },
+                { value: 1e45, symbol: 'TrV+' },
+                { value: 1e42, symbol: 'DuV+' },
+                { value: 1e39, symbol: 'UnV+' },
+                { value: 1e36, symbol: 'V+' },
+                { value: 1e33, symbol: 'D+' },
+                { value: 1e30, symbol: 'N+' },
+                { value: 1e27, symbol: 'O+' },
+                { value: 1e24, symbol: 'Sp+' },
+                { value: 1e21, symbol: 'S+' },
+                { value: 1e18, symbol: 'Qi+' },
+                { value: 1e15, symbol: 'Q+' },
+                { value: 1e12, symbol: 'T+' },
+                { value: 1e9, symbol: 'B+' },
+                { value: 1e6, symbol: 'M+' },
+                { value: 1e3, symbol: 'K+' }
+            ];
 
-            if (num < 1e15) {
-                return `$${num.toFixed(2)}`;
-            }
-
-            const exp = Math.floor(Math.log10(num) / 3);
-            for (let e = 33; e >= 7; e--) {
-                const limit = Math.pow(10, e * 3);
-                if (num >= limit) {
-                    return `$${(num / limit).toFixed(2)}${abbreviations[e]}+`;
+            for (let i = 0; i < abbreviations.length; i++) {
+                if (num >= abbreviations[i].value) {
+                    return '$' + (num / abbreviations[i].value).toFixed(2) + abbreviations[i].symbol;
                 }
             }
-            return `$${num.toFixed(2)}`;
+
+            return '$' + num.toFixed(2);
         }
 
         onValue(onlineRef, (snapshot) => {

@@ -1,17 +1,11 @@
 class GameHub {
     constructor() {
-        this.balance = 0;
-        this.lastAddMoney = parseInt(localStorage.getItem('lastAddMoney')) || 0;
-        this.COOLDOWN_TIME = 5 * 60 * 1000;
+        this.COOLDOWN_TIME = 3600000;
         this.initializeUI();
         this.addEventListeners();
         this.initializeWelcomeMessage();
         this.initializeSettings();
         this.setupBalanceListener();
-        
-        if (this.getTimeLeftOnCooldown() > 0) {
-            this.startCooldownTimer();
-        }
         this.initializeHeaderScroll();
     }
 
@@ -55,13 +49,17 @@ class GameHub {
         const playerRef = doc(db, "users", username);
         onSnapshot(playerRef, (doc) => {
             if (doc.exists()) {
-                window.playerBalance = doc.data().balance;
+                const userData = doc.data();
+                window.playerBalance = userData.balance;
+                window.lastFreeReward = userData.lastFreeReward || 0;
+                
                 if (isNaN(window.playerBalance)) {
                     console.warn("Invalid balance detected, resetting to $1");
                     window.playerBalance = 1;
                     updateBalance(1);
                 }
                 this.updateBalanceDisplay();
+                this.updateAddMoneyButton();
             } else {
                 localStorage.removeItem('username');
                 localStorage.removeItem('userId');
@@ -92,19 +90,19 @@ class GameHub {
         
         if (timeLeft > 0) {
             addFundsBtn.disabled = true;
-            const minutes = Math.floor(timeLeft / 60000);
-            const seconds = Math.floor((timeLeft % 60000) / 1000);
-            addFundsBtn.innerHTML = `<span class="material-icons">hourglass_empty</span> ${minutes}:${seconds.toString().padStart(2, '0')}`;
+            addFundsBtn.textContent = `Wait ${timeLeft} sec`;
         } else {
             addFundsBtn.disabled = false;
-            addFundsBtn.innerHTML = '<span class="material-icons">add_circle</span> Get $1,000';
+            addFundsBtn.textContent = 'Get $1,000';
         }
     }
 
     getTimeLeftOnCooldown() {
         const now = Date.now();
-        const timeSinceLastAdd = now - this.lastAddMoney;
-        return Math.max(0, this.COOLDOWN_TIME - timeSinceLastAdd);
+        const lastReward = window.lastFreeReward || 0;
+        const timeSinceLastReward = now - lastReward;
+        const timeLeft = Math.ceil((this.COOLDOWN_TIME - timeSinceLastReward) / 1000);
+        return Math.max(0, timeLeft);
     }
 
     initializeCategories() {
@@ -129,8 +127,7 @@ class GameHub {
             const timeLeft = this.getTimeLeftOnCooldown();
             
             if (timeLeft > 0) {
-                const seconds = Math.ceil(timeLeft / 1000);
-                this.showNotification(`Please wait ${seconds} seconds before adding more money!`, 'warning');
+                this.showNotification(`Please wait ${timeLeft} seconds before adding more money!`, 'warning');
                 return;
             }
 
@@ -143,40 +140,20 @@ class GameHub {
             }
             
             try {
-                await window.updateBalance(window.playerBalance + amount);
+                const now = Date.now();
+                const playerRef = doc(db, "users", username);
+                await setDoc(playerRef, {
+                    balance: window.playerBalance + amount,
+                    lastFreeReward: now
+                }, { merge: true });
                 
-                this.lastAddMoney = Date.now();
-                localStorage.setItem('lastAddMoney', this.lastAddMoney);
-                
-                this.updateAddMoneyButton();
+                window.lastFreeReward = now;
                 this.showNotification(`Successfully added $${amount.toFixed(2)}!`, 'success');
-                
-                this.startCooldownTimer();
             } catch (error) {
                 console.error("Error adding money:", error);
                 this.showNotification("Failed to add money. Please try again.", 'error');
             }
         });
-    }
-
-    startCooldownTimer() {
-        if (this.cooldownTimer) {
-            clearInterval(this.cooldownTimer);
-        }
-
-        this.updateAddMoneyButton();
-        
-        this.cooldownTimer = setInterval(() => {
-            const timeLeft = this.getTimeLeftOnCooldown();
-            this.updateAddMoneyButton();
-            
-            if (timeLeft <= 0) {
-                clearInterval(this.cooldownTimer);
-                this.showNotification('You can add money again!', 'info');
-                this.lastAddMoney = Date.now();
-                localStorage.setItem('lastAddMoney', this.lastAddMoney);
-            }
-        }, 1000);
     }
 
     showNotification(message, type = 'info') {

@@ -87,7 +87,13 @@ class HorseRaceGame {
         window.playerBalance -= this.betAmount;
         await window.updateBalance(window.playerBalance);
         this.updateBalanceDisplay();
+        
+        // Disable controls during race
         this.actionButton.disabled = true;
+        this.betInput.disabled = true;
+        document.querySelector('.half-btn').disabled = true;
+        document.querySelector('.double-btn').disabled = true;
+        this.horseButtons.forEach(btn => btn.disabled = true);
 
         // Reset horses to starting position
         this.horses.forEach(horse => {
@@ -121,7 +127,13 @@ class HorseRaceGame {
     async endRace(winningHorse) {
         this.gamesPlayed++;
         this.gameActive = false;
+        
+        // Re-enable controls after race
         this.actionButton.disabled = false;
+        this.betInput.disabled = false;
+        document.querySelector('.half-btn').disabled = false;
+        document.querySelector('.double-btn').disabled = false;
+        this.horseButtons.forEach(btn => btn.disabled = false);
 
         if (winningHorse === this.selectedHorse) {
             this.gamesWon++;
