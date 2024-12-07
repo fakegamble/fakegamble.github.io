@@ -367,20 +367,25 @@
                     window.playerBalance = userData.balance;
                     window.isVIP = userData.isVIP || false;
                     document.querySelector('.balance-amount').textContent = '$' + formatLargeNumber(userData.balance);
-                    const welcomeHeading = document.getElementById('welcomeHeading');
-                    const welcomeSubtext = document.getElementById('welcomeSubtext');
-                    const username = localStorage.getItem('username') || 'Player';
-                    if (window.isVIP) {
-                        welcomeHeading.innerHTML = `Welcome back, <span id="welcomeUsername">${username}</span>! 👑`;
-                        welcomeSubtext.textContent = 'VIP Member - Enjoy exclusive benefits!';
-                    } else {
-                        welcomeHeading.innerHTML = `Welcome back, <span id="welcomeUsername">${username}</span>! 🎮`;
-                        welcomeSubtext.textContent = 'Ready to play? Choose your game below!';
-                    }
+                    updateWelcomeMessage();
                     setupAddFundsButton(window.isVIP);
                 });
             }
             document.querySelector('.balance-amount').textContent = '$' + formatLargeNumber(window.playerBalance);
+        }
+
+        function updateWelcomeMessage() {
+            const welcomeHeading = document.getElementById('welcomeHeading');
+            const welcomeSubtext = document.getElementById('welcomeSubtext');
+            const username = localStorage.getItem('username') || 'Player';
+            
+            if (window.isVIP) {
+                welcomeHeading.innerHTML = `Welcome back, <span id="welcomeUsername">${username}</span>! 👑`;
+                welcomeSubtext.textContent = 'VIP Member - Enjoy exclusive benefits!';
+            } else {
+                welcomeHeading.innerHTML = `Welcome back, <span id="welcomeUsername">${username}</span>!🎮`;
+                welcomeSubtext.textContent = 'Ready to play? Choose your game below!';
+            }
         }
 
         function setupAddFundsButton(isVIP) {
@@ -494,12 +499,6 @@
                 });
             }
         });
-
-        document.getElementById('welcomeUsername').textContent = localStorage.getItem('username') || 'Player';
-        if (window.isVIP) {
-            document.getElementById('welcomeHeading').innerHTML = `Welcome back, <span id="welcomeUsername">${localStorage.getItem('username') || 'Player'}</span>! 👑`;
-            document.getElementById('welcomeSubtext').textContent = 'VIP Member - Enjoy exclusive benefits!';
-        }
     </script>
 </body>
 </html>
