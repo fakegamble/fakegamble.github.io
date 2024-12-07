@@ -12,27 +12,27 @@ class MinesGame {
         this.autoPlayActive = false;
 
         this.multiplierMap = {
-            1: 1.03,
-            2: 1.06,
-            3: 1.10,
-            4: 1.20,
-            5: 1.30,
-            6: 1.45,
-            7: 1.65,
-            8: 1.90,
-            9: 2.20,
-            10: 2.60,
-            11: 3.10,
-            12: 3.80,
-            13: 4.70,
-            14: 5.90,
-            15: 7.60,
-            16: 10.00,
-            17: 13.50,
-            18: 19.00,
-            19: 28.00,
-            20: 44.00,
-            21: 76.00
+            1: 1.10,
+            2: 1.20,
+            3: 1.30,
+            4: 1.40,
+            5: 1.50,
+            6: 1.60,
+            7: 1.70,
+            8: 1.80,
+            9: 1.90,
+            10: 2.00,
+            11: 2.10,
+            12: 2.20,
+            13: 2.30,
+            14: 2.40,
+            15: 2.50,
+            16: 2.60,
+            17: 2.70,
+            18: 2.80,
+            19: 2.90,
+            20: 3.00,
+            21: 10.00  // Jackpot multiplier - adjust this value as needed
         };
 
         if (typeof window.playerBalance === 'undefined') {
@@ -193,6 +193,14 @@ class MinesGame {
         }
     }
 
+    revealAllMines() {
+        this.mines.forEach(position => {
+            const cell = document.querySelector(`[data-index="${position}"]`);
+            cell.classList.add('mine');
+            cell.style.animation = 'revealMine 0.3s ease forwards';
+        });
+    }
+
     async handleCellClick(position) {
         if (!this.gameActive || this.revealed.has(position)) return;
 
@@ -223,28 +231,30 @@ class MinesGame {
         if (!this.gameActive) return;
         
         const profit = this.currentProfit;
+        const total = this.betAmount + profit;
         this.gameActive = false;
         
         try {
             // Add winnings to balance and update Firebase immediately
-            window.playerBalance += (this.betAmount + profit);
+            window.playerBalance += total;
             await window.updateBalance(window.playerBalance);
             this.updateBalanceDisplay();
             
-            this.showResult('Winner!', `+$${profit.toFixed(2)}`);
+            this.showResult('Winner!', `+$${total.toFixed(2)}`);
+            this.revealAllMines();  // Add this line to reveal mines after cashout
             this.endGame();
         } catch (error) {
             console.error("Error cashing out:", error);
             this.showResult('Error', 'Failed to cash out', true);
             // Revert balance if update failed
-            window.playerBalance -= (this.betAmount + profit);
+            window.playerBalance -= total;
             this.updateBalanceDisplay();
         }
     }
 
     updateProfit() {
-        let multiplier = this.multiplierMap[this.mineCount] || this.calculateMultiplier();
-        this.currentProfit = this.betAmount * Math.pow(multiplier, this.revealed.size);
+        const multiplier = this.multiplierMap[this.mineCount];
+        this.currentProfit = this.betAmount * multiplier * this.revealed.size;
     }
 
     calculateMultiplier() {
