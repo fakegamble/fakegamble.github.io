@@ -3,104 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - FakeGamble</title>
+    <title>Login - FakeGamble</title>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
+        :root {
+            --background-color: #0f172a;
+            --surface-color: #1e293b;
+            --primary-color: #4f46e5;
+            --accent-color: #7c3aed;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border-radius: 16px;
+            --border-radius-lg: 24px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+            --gradient-primary: linear-gradient(135deg, #4f46e5, #7c3aed);
+            --gradient-surface: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(30, 41, 59, 0.6));
+            --gradient-background: radial-gradient(circle at top right, #1e1b4b, #0f172a 60%);
+        }
+
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background: var(--gradient-background);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            background: #0f172a;
-            color: #fff;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(124, 58, 237, 0.1), transparent 25%),
+                radial-gradient(circle at 80% 80%, rgba(79, 70, 229, 0.1), transparent 25%);
+            pointer-events: none;
         }
 
         .login-container {
-            background: #1e293b;
-            padding: 2rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            width: 100%;
-            max-width: 400px;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+            padding: 2.5rem;
+            border-radius: var(--border-radius-lg);
+            width: 90%;
+            max-width: 500px;
             margin: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.3),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
         }
 
         h1 {
-            margin: 0 0 1.5rem 0;
+            font-size: 1.75rem;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #fff, #4f46e5, #7c3aed, #fff);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 800;
+            margin-bottom: 2rem;
             text-align: center;
-            color: #f8fafc;
+            animation: shine 8s linear infinite;
         }
 
         .form-group {
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
         }
 
         label {
             display: block;
-            margin-bottom: 0.5rem;
-            color: #cbd5e1;
+            margin-bottom: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.9375rem;
         }
 
         input {
             width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #475569;
-            border-radius: 0.25rem;
-            background: #334155;
-            color: #fff;
-            box-sizing: border-box;
+            padding: 0.875rem 1.25rem;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: var(--transition);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(8px);
         }
 
         input:focus {
             outline: none;
-            border-color: #60a5fa;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3);
         }
 
         button {
             width: 100%;
-            padding: 0.75rem;
-            background: #2563eb;
-            color: white;
+            padding: 0.875rem 1.5rem;
+            background: var(--gradient-primary);
             border: none;
-            border-radius: 0.25rem;
+            border-radius: var(--border-radius);
+            color: white;
+            font-weight: 600;
+            font-size: 0.9375rem;
             cursor: pointer;
-            font-size: 1rem;
-            margin-top: 1rem;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
         }
 
         button:hover {
-            background: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);
         }
 
         .error {
+            display: none;
             color: #ef4444;
-            margin-top: 0.5rem;
+            margin: 1.5rem 0;
             font-size: 0.875rem;
+            padding: 0.75rem 1rem;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(239, 68, 68, 0.2);
         }
 
         .links {
-            margin-top: 1rem;
+            margin-top: 1.5rem;
             text-align: center;
         }
 
         .links a {
-            color: #60a5fa;
+            color: var(--accent-color);
             text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s ease;
         }
 
         .links a:hover {
-            text-decoration: underline;
+            color: var(--primary-color);
+            text-shadow: 0 0 8px rgba(124, 58, 237, 0.3);
+        }
+
+        @keyframes shine {
+            to {
+                background-position: 300% center;
+            }
         }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <h1>Register</h1>
-        <form id="registerForm">
+        <h1>Login</h1>
+        <div id="error" class="error"></div>
+        <form id="loginForm">
             <div id="loading" style="display: none; text-align: center; margin-bottom: 1rem;">
-                Registering...
+                Logging in...
             </div>
             <div class="form-group">
                 <label for="username">Username</label>
@@ -110,15 +181,10 @@
                 <label for="password">Password</label>
                 <input type="password" id="password" required>
             </div>
-            <div class="form-group">
-                <label for="confirmPassword">Confirm Password</label>
-                <input type="password" id="confirmPassword" required>
-            </div>
-            <div id="error" class="error"></div>
-            <button type="submit">Register</button>
+            <button type="submit">Login</button>
         </form>
         <div class="links">
-            <a href="login.html">Already have an account? Login</a>
+            <a href="../register/">Don't have an account? Register</a>
         </div>
     </div>
 
@@ -127,7 +193,6 @@
         import { 
             getFirestore, 
             doc, 
-            setDoc,
             getDoc 
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -147,7 +212,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.target;
             const errorDiv = document.getElementById('error');
@@ -157,48 +222,23 @@
             // Disable form while submitting
             submitButton.disabled = true;
             loadingDiv.style.display = 'block';
+            errorDiv.style.display = 'none';
             errorDiv.textContent = '';
 
             try {
                 const username = document.getElementById('username').value;
                 const password = document.getElementById('password').value;
-                const confirmPassword = document.getElementById('confirmPassword').value;
 
-                console.log('Attempting registration with:', { username, password });
-
-                // Validate password match
-                if (password !== confirmPassword) {
-                    throw new Error("Passwords don't match");
+                // Get user data
+                const userDoc = await getDoc(doc(db, "users", username));
+                if (!userDoc.exists()) {
+                    throw new Error("Username not found");
                 }
 
-                // Validate username
-                if (username.length < 3) {
-                    throw new Error("Username must be at least 3 characters long");
+                const userData = userDoc.data();
+                if (userData.password !== password) {
+                    throw new Error("Incorrect password");
                 }
-
-                if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-                    throw new Error("Username can only contain letters, numbers, and underscores");
-                }
-
-                // Validate password
-                if (password.length < 6) {
-                    throw new Error("Password must be at least 6 characters long");
-                }
-
-                // Check if username exists
-                const usernameDoc = await getDoc(doc(db, "users", username));
-                if (usernameDoc.exists()) {
-                    throw new Error("Username already taken");
-                }
-
-                // Store user data
-                console.log('Storing user data...');
-                await setDoc(doc(db, "users", username), {
-                    username: username,
-                    password: password,
-                    balance: 100,
-                    createdAt: new Date().toISOString()
-                });
 
                 // Store user info in localStorage
                 localStorage.setItem('userId', username);
@@ -207,9 +247,10 @@
                 // Redirect to home page
                 window.location.href = '/';
             } catch (error) {
-                console.error('Registration error:', error);
+                console.error(error);
                 let errorMessage = error.message;
                 errorDiv.textContent = errorMessage;
+                errorDiv.style.display = 'block';
             } finally {
                 // Re-enable form
                 submitButton.disabled = false;
@@ -218,9 +259,17 @@
         });
 
         // Check if user is already logged in
-        const userId = localStorage.getItem('userId');
-        if (userId) {
-            window.location.href = '/';
+        const username = localStorage.getItem('username');
+        if (username) {
+            // Verify user exists in database before redirecting
+            const userDoc = await getDoc(doc(db, "users", username));
+            if (userDoc.exists()) {
+                window.location.href = '/';
+            } else {
+                // Clear invalid credentials
+                localStorage.removeItem('username');
+                localStorage.removeItem('userId');
+            }
         }
     </script>
 </body>
