@@ -34,7 +34,13 @@
                     <div class="balance-display">
                         <span class="balance-label">Balance</span>
                         <span class="balance-amount" id="balanceDisplay">$0.00</span>
-                        <button class="add-funds">
+                        <button class="add-funds free-button">
+                            <span class="material-icons">add_circle</span>
+                            Get $1,000
+                        </button>
+                        <button class="add-funds vip-button" style="display: none;">
+                            <span class="material-icons">stars</span>
+                            Get $10M
                         </button>
                     </div>
                     <button class="settings-btn">
@@ -304,13 +310,47 @@
                 return '0.00';
             }
 
-            if (num >= 1000000) {
-                return (num / 1000000).toFixed(2) + 'M';
-            } else if (num >= 1000) {
-                return (num / 1000).toFixed(2) + 'K';
-            } else {
-                return num.toFixed(2);
+            const abbreviations = [
+                { value: 1e93, symbol: 'NvTg+' },
+                { value: 1e90, symbol: 'OcTg+' },
+                { value: 1e87, symbol: 'SptTg+' },
+                { value: 1e84, symbol: 'SxTg+' },
+                { value: 1e81, symbol: 'QiTg+' },
+                { value: 1e78, symbol: 'QTg+' },
+                { value: 1e75, symbol: 'TrTg+' },
+                { value: 1e72, symbol: 'DuTg+' },
+                { value: 1e69, symbol: 'UnTg+' },
+                { value: 1e66, symbol: 'Tg+' },
+                { value: 1e63, symbol: 'NvV+' },
+                { value: 1e60, symbol: 'OcV+' },
+                { value: 1e57, symbol: 'SptV+' },
+                { value: 1e54, symbol: 'SxV+' },
+                { value: 1e51, symbol: 'QVn+' },
+                { value: 1e48, symbol: 'QV+' },
+                { value: 1e45, symbol: 'TrV+' },
+                { value: 1e42, symbol: 'DuV+' },
+                { value: 1e39, symbol: 'UnV+' },
+                { value: 1e36, symbol: 'V+' },
+                { value: 1e33, symbol: 'D+' },
+                { value: 1e30, symbol: 'N+' },
+                { value: 1e27, symbol: 'O+' },
+                { value: 1e24, symbol: 'Sp+' },
+                { value: 1e21, symbol: 'S+' },
+                { value: 1e18, symbol: 'Qi+' },
+                { value: 1e15, symbol: 'Q+' },
+                { value: 1e12, symbol: 'T+' },
+                { value: 1e9, symbol: 'B+' },
+                { value: 1e6, symbol: 'M+' },
+                { value: 1e3, symbol: 'K+' }
+            ];
+
+            for (let i = 0; i < abbreviations.length; i++) {
+                if (num >= abbreviations[i].value) {
+                    return (num / abbreviations[i].value).toFixed(2) + abbreviations[i].symbol;
+                }
             }
+
+            return num.toFixed(2);
         }
 
         // Check if user is logged in
@@ -337,14 +377,128 @@
             const playerDoc = await getDoc(playerRef);
             
             if (!playerDoc.exists()) {
-                // If user document doesn't exist, redirect to login
                 localStorage.removeItem('username');
                 localStorage.removeItem('userId');
                 window.location.href = '/login.html';
             } else {
-                window.playerBalance = playerDoc.data().balance;
+                const userData = playerDoc.data();
+                window.playerBalance = userData.balance;
+                window.isVIP = userData.isVIP || false;
+                window.lastFreeReward = userData.lastFreeReward || 0;
+                
+                // Add real-time listener for balance updates
+                onSnapshot(playerRef, (doc) => {
+                    const userData = doc.data();
+                    window.playerBalance = userData.balance;
+                    document.querySelector('.balance-amount').textContent = '$' + formatLargeNumber(userData.balance);
+                });
+                
+                setupAddFundsButton(window.isVIP);
             }
-            document.querySelector('.balance-amount').textContent = formatLargeNumber(window.playerBalance);
+            
+            // Initial balance display
+            document.querySelector('.balance-amount').textContent = '$' + formatLargeNumber(window.playerBalance);
+        }
+
+        function setupAddFundsButton(isVIP) {
+            const freeButton = document.querySelector('.free-button');
+            const vipButton = document.querySelector('.vip-button');
+            
+            if (isVIP) {
+                // Hide free button
+                freeButton.style.display = 'none';
+                
+                // Setup VIP button
+                vipButton.style.display = 'flex';
+                vipButton.style.alignItems = 'center';
+                vipButton.style.gap = '4px';
+                
+                // Setup live balance monitoring for VIP button
+                const username = checkLogin();
+                const playerRef = doc(db, "users", username);
+                onSnapshot(playerRef, (doc) => {
+                    const userData = doc.data();
+                    window.playerBalance = userData.balance;
+                    
+                    // Update button state based on current balance
+                    if (window.playerBalance >= 5000000) {
+                        vipButton.disabled = true;
+                        vipButton.style.opacity = '0.5';
+                        vipButton.style.cursor = 'not-allowed';
+                    } else {
+                        vipButton.disabled = false;
+                        vipButton.style.opacity = '1';
+                        vipButton.style.cursor = 'pointer';
+                    }
+                });
+                
+                vipButton.onclick = async (e) => {
+                    e.preventDefault();
+                    if (window.playerBalance < 5000000) {
+                        const newBalance = window.playerBalance + 10000000;
+                        await updateBalance(newBalance);
+                    }
+                };
+            } else {
+                // Show free button, hide VIP button
+                freeButton.style.display = 'flex';
+                vipButton.style.display = 'none';
+
+                // Setup live monitoring for free button cooldown
+                const username = checkLogin();
+                const playerRef = doc(db, "users", username);
+                onSnapshot(playerRef, (doc) => {
+                    const userData = doc.data();
+                    window.lastFreeReward = userData.lastFreeReward || 0;
+                    
+                    // Update countdown every second
+                    const updateCountdown = () => {
+                        const now = Date.now();
+                        const cooldownTime = 3600000; // 1 hour in milliseconds
+                        
+                        if (now - window.lastFreeReward < cooldownTime) {
+                            freeButton.disabled = true;
+                            freeButton.style.opacity = '0.5';
+                            freeButton.style.cursor = 'not-allowed';
+                            
+                            const timeLeft = Math.ceil((cooldownTime - (now - window.lastFreeReward)) / 1000);
+                            freeButton.textContent = `Wait ${timeLeft} sec`;
+                        } else {
+                            freeButton.disabled = false;
+                            freeButton.style.opacity = '1';
+                            freeButton.style.cursor = 'pointer';
+                            freeButton.textContent = 'Free $1,000';
+                        }
+                    };
+
+                    // Initial update
+                    updateCountdown();
+                    
+                    // Update every second
+                    const countdownInterval = setInterval(updateCountdown, 1000);
+                    
+                    // Cleanup interval when snapshot updates
+                    return () => clearInterval(countdownInterval);
+                });
+                freeButton.onclick = async (e) => {
+                    e.preventDefault();
+                    const now = Date.now();
+                    if (now - window.lastFreeReward >= 3600000) { // Check if 1 hour has passed
+                        const newBalance = window.playerBalance + 1000;
+                        await setDoc(playerRef, {
+                            balance: newBalance,
+                            lastFreeReward: now
+                        }, { merge: true });
+                        window.playerBalance = newBalance;
+                        window.lastFreeReward = now;
+                    }
+                };
+            }
+        }
+
+        // Remove any existing balance update handlers
+        if (window.balanceUpdateHandler) {
+            window.balanceUpdateHandler();
         }
 
         // Make everything globally available

@@ -434,6 +434,37 @@
     align-items: center;  /* This was already there */
     gap: 0.5rem;
 }
+
+.vip-badge {
+    background: linear-gradient(135deg, #fbbf24, #d97706);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.btn-vip {
+    background: linear-gradient(135deg, #fbbf24, #d97706);
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-vip:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+}
+
+.btn-vip.active {
+    background: linear-gradient(135deg, #059669, #10b981);
+}
     </style>
 </head>
 <body>
@@ -494,7 +525,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, onSnapshot, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, deleteDoc, onSnapshot, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getDatabase, ref, get, onValue, onDisconnect, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
@@ -666,8 +697,8 @@
                 snapshot.forEach((doc) => {
                     const user = doc.data();
                     const userId = doc.id;
-                    // Get the balance from the correct path in user data
-                    const balance = user.balance?.amount || 0; // Using optional chaining to safely access nested property
+                    // Get the balance directly as it's stored in the database
+                    const balance = user.balance || 0;
                     
                     const playerCard = document.createElement('div');
                     playerCard.className = 'card';
@@ -678,6 +709,7 @@
                                 <div class="device-header">
                                     <h3>Username: ${user.username || userId}</h3>
                                     <div id="online-${userId}"></div>
+                                    ${user.isVIP ? '<span class="vip-badge">VIP</span>' : ''}
                                 </div>
                                 <div class="balance">Current Balance: ${formatLargeNumber(balance)}</div>
                             </div>
@@ -685,6 +717,9 @@
                                 <input type="number" value="${balance.toFixed(2)}" data-username="${userId}">
                                 <button class="btn" onclick="updatePlayerBalance('${userId}', this.previousElementSibling.value)">
                                     Update Balance
+                                </button>
+                                <button class="btn-vip ${user.isVIP ? 'active' : ''}" onclick="toggleVIP('${userId}')">
+                                    ${user.isVIP ? 'Remove VIP' : 'Make VIP'}
                                 </button>
                             </div>
                         </div>
@@ -708,32 +743,30 @@
                 let totalBalance = 0;
                 let playerCount = 0;
 
-                snapshot.docChanges().forEach((change) => {
-                    if (change.type === "modified") {
-                        const user = change.doc.data();
-                        const balance = user.balance?.amount || 0;
-                        const playerCard = document.getElementById(`player-${change.doc.id}`);
-                        if (playerCard) {
-                            const balanceElement = playerCard.querySelector('.balance');
-                            balanceElement.textContent = `Current Balance: ${formatLargeNumber(balance)}`;
-                            
-                            const input = playerCard.querySelector('input[type="number"]');
-                            if (!input.matches(':focus') && input.value !== balance.toFixed(2)) {
-                                input.value = balance.toFixed(2);
-                            }
+                // Reset stats first
+                snapshot.forEach((doc) => {
+                    const user = doc.data();
+                    const balance = parseFloat(user.balance) || 0;
+                    totalBalance += balance;
+                    playerCount++;
+
+                    // Update individual player card if it exists
+                    const playerCard = document.getElementById(`player-${doc.id}`);
+                    if (playerCard) {
+                        const balanceElement = playerCard.querySelector('.balance');
+                        balanceElement.textContent = `Current Balance: ${formatLargeNumber(balance)}`;
+                        
+                        const input = playerCard.querySelector('input[type="number"]');
+                        if (!input.matches(':focus') && input.value !== balance.toFixed(2)) {
+                            input.value = balance.toFixed(2);
                         }
                     }
                 });
 
-                snapshot.forEach((doc) => {
-                    const user = doc.data();
-                    const balance = user.balance?.amount || 0;
-                    totalBalance += balance;
-                    playerCount++;
-                });
-
+                // Calculate average balance
                 const avgBalance = playerCount > 0 ? totalBalance / playerCount : 0;
 
+                // Update stats display
                 document.getElementById('totalPlayers').textContent = playerCount;
                 document.getElementById('totalBalance').textContent = formatLargeNumber(totalBalance);
                 document.getElementById('avgBalance').textContent = formatLargeNumber(avgBalance);
@@ -749,9 +782,7 @@
                 }
                 
                 await setDoc(doc(db, "users", userId), {
-                    balance: {
-                        amount: parseFloat(balanceNum.toFixed(2))
-                    }
+                    balance: parseFloat(balanceNum.toFixed(2))
                 }, { merge: true });
                 
                 console.log(`Balance updated for user ${userId}`);
@@ -813,6 +844,37 @@
                 alert("Error resetting players: " + error.message);
             }
         }
+
+                window.toggleVIP = async function(userId) {
+            try {
+                // Get current VIP status
+                const userDoc = await getDoc(doc(db, "users", userId));
+                const currentVIPStatus = userDoc.data()?.isVIP || false;
+                
+                // Update user's VIP status
+                await setDoc(doc(db, "users", userId), {
+                    isVIP: !currentVIPStatus
+                }, { merge: true });
+                
+                // Update VIP collection
+                if (!currentVIPStatus) {
+                    // Add to VIP collection
+                    await setDoc(doc(db, "vips", userId), {
+                        userId: userId,
+                        grantedAt: serverTimestamp()
+                    });
+                } else {
+                    // Remove from VIP collection
+                    await deleteDoc(doc(db, "vips", userId));
+                }
+                
+                console.log(`VIP status updated for user ${userId}`);
+            } catch (error) {
+                console.error("Error updating VIP status:", error);
+                alert("Error updating VIP status: " + error.message);
+            }
+        }
+
 
         checkAuth();
         initializePlayersList();
