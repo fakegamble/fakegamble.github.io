@@ -357,7 +357,7 @@
         function checkLogin() {
             const username = localStorage.getItem('username');
             if (!username) {
-                window.location.href = '/login.html';
+                window.location.href = '/login/';
             }
             return username;
         }
@@ -379,7 +379,7 @@
             if (!playerDoc.exists()) {
                 localStorage.removeItem('username');
                 localStorage.removeItem('userId');
-                window.location.href = '/login.html';
+                window.location.href = '/login/';
             } else {
                 const userData = playerDoc.data();
                 window.playerBalance = userData.balance;

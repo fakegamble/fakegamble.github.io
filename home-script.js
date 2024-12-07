@@ -48,7 +48,7 @@ class GameHub {
     setupBalanceListener() {
         const username = localStorage.getItem('username');
         if (!username) {
-            window.location.href = '/login.html';
+            window.location.href = '/login/';
             return;
         }
 
@@ -60,7 +60,7 @@ class GameHub {
             } else {
                 localStorage.removeItem('username');
                 localStorage.removeItem('userId');
-                window.location.href = '/login.html';
+                window.location.href = '/login/';
             }
         });
     }
@@ -133,7 +133,7 @@ class GameHub {
             const username = localStorage.getItem('username');
             
             if (!username) {
-                window.location.href = '/login.html';
+                window.location.href = '/login/';
                 return;
             }
             

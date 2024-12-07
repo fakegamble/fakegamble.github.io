@@ -10,31 +10,8 @@ class MinesGame {
         this.currentProfit = 0;
         this.autoPlaySettings = null;
         this.autoPlayActive = false;
-
-        this.multiplierMap = {
-            1: 1.10,
-            2: 1.20,
-            3: 1.30,
-            4: 1.40,
-            5: 1.50,
-            6: 1.60,
-            7: 1.70,
-            8: 1.80,
-            9: 1.90,
-            10: 2.00,
-            11: 2.10,
-            12: 2.20,
-            13: 2.30,
-            14: 2.40,
-            15: 2.50,
-            16: 2.60,
-            17: 2.70,
-            18: 2.80,
-            19: 2.90,
-            20: 3.00,
-            21: 10.00  // Jackpot multiplier - adjust this value as needed
-        };
-
+        this.currentMultiplier = 1.0; // Track current multiplier
+        
         if (typeof window.playerBalance === 'undefined') {
             window.addEventListener('balanceInitialized', () => {
                 this.initialize();
@@ -56,7 +33,7 @@ class MinesGame {
     setupBalanceListener() {
         const username = localStorage.getItem('username');
         if (!username) {
-            window.location.href = '/login.html';
+            window.location.href = '/login/';
             return;
         }
         
@@ -68,7 +45,7 @@ class MinesGame {
                 this.updateBalanceDisplay();
             } else {
                 localStorage.removeItem('username');
-                window.location.href = '/login.html';
+                window.location.href = '/login/';
             }
         });
     }
@@ -135,7 +112,7 @@ class MinesGame {
     async startGame() {
         const username = localStorage.getItem('username');
         if (!username) {
-            window.location.href = '/login.html';
+            window.location.href = '/login/';
             return;
         }
 
@@ -163,6 +140,7 @@ class MinesGame {
             this.gameActive = true;
             this.revealed.clear();
             this.currentProfit = 0;
+            this.currentMultiplier = 1.0; // Reset multiplier
             this.placeMines();
             this.updateUI();
             
@@ -216,13 +194,13 @@ class MinesGame {
         const cell = document.querySelector(`[data-index="${position}"]`);
         cell.classList.add('revealed');
 
-        const revealedCount = this.revealed.size;
-        const multiplier = this.calculateMultiplier(revealedCount);
-        this.currentProfit = (this.betAmount * multiplier) - this.betAmount;
+        // Update multiplier with compound effect
+        this.currentMultiplier *= 1.30;
+        this.currentProfit = (this.betAmount * this.currentMultiplier) - this.betAmount;
         
         this.updateUI();
 
-        if (revealedCount === this.totalTiles - this.mines.length) {
+        if (this.revealed.size === this.totalTiles - this.mines.length) {
             await this.cashOut();
         }
     }
@@ -253,14 +231,11 @@ class MinesGame {
     }
 
     updateProfit() {
-        const multiplier = this.multiplierMap[this.mineCount];
-        this.currentProfit = this.betAmount * multiplier * this.revealed.size;
+        this.currentProfit = (this.betAmount * this.currentMultiplier) - this.betAmount;
     }
 
-    calculateMultiplier() {
-        const safeSpots = this.totalTiles - this.mineCount;
-        const baseMultiplier = this.totalTiles / safeSpots;
-        return 1 + (baseMultiplier - 1) * 0.95;
+    calculateMultiplier(revealedCount) {
+        return this.currentMultiplier;
     }
 
     endGame() {
@@ -412,7 +387,7 @@ class MinesGame {
     async addMoney(amount) {
         const username = localStorage.getItem('username');
         if (!username) {
-            window.location.href = '/login.html';
+            window.location.href = '/login/';
             return;
         }
 

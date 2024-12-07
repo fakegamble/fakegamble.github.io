@@ -28,7 +28,7 @@ class CoinFlipGame {
     setupBalanceListener() {
         const username = localStorage.getItem('username');
         if (!username) {
-            window.location.href = '/login.html';
+            window.location.href = '/login/';
             return;
         }
         
@@ -40,7 +40,7 @@ class CoinFlipGame {
                 this.updateBalanceDisplay();
             } else {
                 localStorage.removeItem('username');
-                window.location.href = '/login.html';
+                window.location.href = '/login/';
             }
         });
     }

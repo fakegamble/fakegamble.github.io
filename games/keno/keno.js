@@ -40,7 +40,7 @@ class KenoGame {
     setupBalanceListener() {
         const username = localStorage.getItem('username');
         if (!username) {
-            window.location.href = '/login.html';
+            window.location.href = '/login/';
             return;
         }
         
@@ -52,7 +52,7 @@ class KenoGame {
                 this.updateBalanceDisplay();
             } else {
                 localStorage.removeItem('username');
-                window.location.href = '/login.html';
+                window.location.href = '/login/';
             }
         });
     }
@@ -218,7 +218,7 @@ class KenoGame {
     async saveBalance() {
         const username = localStorage.getItem('username');
         if (!username) {
-            window.location.href = '/login.html';
+            window.location.href = '/login/';
             return;
         }
 

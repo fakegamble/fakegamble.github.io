@@ -30,7 +30,7 @@ class BlackjackGame {
     setupBalanceListener() {
         const username = localStorage.getItem('username');
         if (!username) {
-            window.location.href = '/login.html';
+            window.location.href = '/login/';
             return;
         }
         
@@ -47,7 +47,7 @@ class BlackjackGame {
                 }
             } else {
                 localStorage.removeItem('username');
-                window.location.href = '/login.html';
+                window.location.href = '/login/';
             }
         });
     }
