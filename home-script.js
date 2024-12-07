@@ -3,7 +3,6 @@ class GameHub {
         this.COOLDOWN_TIME = 3600000;
         this.initializeUI();
         this.addEventListeners();
-        this.initializeWelcomeMessage();
         this.initializeSettings();
         this.setupBalanceListener();
         this.initializeHeaderScroll();
@@ -25,18 +24,6 @@ class GameHub {
                 origin: { y: 0.6 }
             });
         }
-    }
-
-    initializeWelcomeMessage() {
-        const username = localStorage.getItem('username') || 'Player';
-        const mainContent = document.querySelector('.main-content');
-        const welcomeDiv = document.createElement('div');
-        welcomeDiv.className = 'welcome-message';
-        welcomeDiv.innerHTML = `
-            <h2>Welcome back, ${username}! 🎮</h2>
-            <p>Ready to play? Choose your game below!</p>
-        `;
-        mainContent.insertBefore(welcomeDiv, mainContent.firstChild);
     }
 
     setupBalanceListener() {

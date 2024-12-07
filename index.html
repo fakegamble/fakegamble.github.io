@@ -50,6 +50,10 @@
             </div>
         </header>
         <main class="main-content">
+            <div class="welcome-message">
+                <h2 id="welcomeHeading">Welcome back, <span id="welcomeUsername">Player</span>! 🎮</h2>
+                <p id="welcomeSubtext">Ready to play? Choose your game below!</p>
+            </div>
             <div class="categories-wrapper">
                 <div class="category active">
                     <span class="material-icons">stars</span>
@@ -64,8 +68,6 @@
                     <span>Table Games</span>
                 </div>
             </div>
-
-
             <div class="games-container">
                 <a href="/games/mines/" class="game-card">
                     <div class="game-preview">
@@ -225,38 +227,41 @@
                         </div>
                     </div>
                 </a>
-    <div class="settings-modal" id="settingsModal">
-        <div class="settings-content">
-            <div class="settings-header">
-                <h2>Settings</h2>
-                <button class="close-settings">
-                    <span class="material-icons">close</span>
-                </button>
             </div>
-            <div class="settings-body">
-                <div class="settings-section">
-                    <h3>Theme Colors</h3>
-                    <div class="color-settings">
-                        <div class="color-option">
-                            <label>Primary Color</label>
-                            <input type="color" id="primaryColor" value="#4f46e5">
-                        </div>
-                        <div class="color-option">
-                            <label>Accent Color</label>
-                            <input type="color" id="accentColor" value="#7c3aed">
-                        </div>
-                        <div class="color-option">
-                            <label>Background Color</label>
-                            <input type="color" id="backgroundColor" value="#0f172a">
-                        </div>
-                    </div>
-                    <button class="reset-colors">Reset to Default</button>
+        </main>
+        <div class="settings-modal" id="settingsModal">
+            <div class="settings-content">
+                <div class="settings-header">
+                    <h2>Settings</h2>
+                    <button class="close-settings">
+                        <span class="material-icons">close</span>
+                    </button>
                 </div>
-                <div class="settings-section">
-                    <h3>Credits</h3>
-                    <div class="credits-info">
-                        <p>Developed by <a href="https://fakegamble.github.io/" target="_blank">Xavier</a></p>
-                        <p>Version 1.0.0</p>
+                <div class="settings-body">
+                    <div class="settings-section">
+                        <h3>Theme Colors</h3>
+                        <div class="color-settings">
+                            <div class="color-option">
+                                <label>Primary Color</label>
+                                <input type="color" id="primaryColor" value="#4f46e5">
+                            </div>
+                            <div class="color-option">
+                                <label>Accent Color</label>
+                                <input type="color" id="accentColor" value="#7c3aed">
+                            </div>
+                            <div class="color-option">
+                                <label>Background Color</label>
+                                <input type="color" id="backgroundColor" value="#0f172a">
+                            </div>
+                        </div>
+                        <button class="reset-colors">Reset to Default</button>
+                    </div>
+                    <div class="settings-section">
+                        <h3>Credits</h3>
+                        <div class="credits-info">
+                            <p>Developed by <a href="https://fakegamble.github.io/" target="_blank">Xavier</a></p>
+                            <p>Version 1.0.0</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -265,51 +270,29 @@
     <script src="home-script.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { 
-            getFirestore, 
-            doc, 
-            setDoc, 
-            getDoc,
-            onSnapshot 
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getDatabase, ref, onValue, onDisconnect, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        const _0x3f8b2c = {
-            _k: 'QWlhU3lCV1N2Q1VnbGw4T2NvdWJDaTBHZUF2Vm5DV18zYkVzV3c=',
-            _d: 'dmlld3MtZDBiM2Iud2ViLmFwcA==',
-            _u: 'aHR0cHM6Ly92aWV3cy1kMGIzYi1kZWZhdWx0LXJ0ZGIuZmlyZWJhc2Vpby5jb20=',
-            _p: 'dmlld3MtZDBiM2I=',
-            _s: 'dmlld3MtZDBiM2IuZmlyZWJhc2VzdG9yYWdlLmFwcA==',
-            _m: 'Mjc4NTU0MTAwOTc=',
-            _a: 'MToyNzg1NTQxMDA5Nzp3ZWI6MDJlN2E0OWEwMWJlMTBkZGMzMjM5MA==',
-            _t: 'Ry01RFBEWllEUkZK'
-        };
-
         const firebaseConfig = {
-            apiKey: atob(_0x3f8b2c._k),
-            authDomain: atob(_0x3f8b2c._d),
-            databaseURL: atob(_0x3f8b2c._u),
-            projectId: atob(_0x3f8b2c._p),
-            storageBucket: atob(_0x3f8b2c._s),
-            messagingSenderId: atob(_0x3f8b2c._m),
-            appId: atob(_0x3f8b2c._a),
-            measurementId: atob(_0x3f8b2c._t)
+            apiKey: atob('QWlhU3lCV1N2Q1VnbGw4T2NvdWJDaTBHZUF2Vm5DV18zYkVzV3c='),
+            authDomain: atob('dmlld3MtZDBiM2Iud2ViLmFwcA=='),
+            databaseURL: atob('aHR0cHM6Ly92aWV3cy1kMGIzYi1kZWZhdWx0LXJ0ZGIuZmlyZWJhc2Vpby5jb20='),
+            projectId: atob('dmlld3MtZDBiM2I='),
+            storageBucket: atob('dmlld3MtZDBiM2IuZmlyZWJhc2VzdG9yYWdlLmFwcA=='),
+            messagingSenderId: atob('Mjc4NTU0MTAwOTc='),
+            appId: atob('MToyNzg1NTQxMDA5Nzp3ZWI6MDJlN2E0OWEwMWJlMTBkZGMzMjM5MA=='),
+            measurementId: atob('Ry01RFBEWllEUkZK')
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const database = getDatabase(app);
 
         function formatLargeNumber(num) {
-            // Ensure num is a number
             num = Number(num);
-            
-            // Check if conversion was successful
             if (isNaN(num)) {
                 return '0.00';
             }
-
             const abbreviations = [
                 { value: 1e93, symbol: 'NvTg+' },
                 { value: 1e90, symbol: 'OcTg+' },
@@ -343,17 +326,14 @@
                 { value: 1e6, symbol: 'M+' },
                 { value: 1e3, symbol: 'K+' }
             ];
-
             for (let i = 0; i < abbreviations.length; i++) {
                 if (num >= abbreviations[i].value) {
                     return (num / abbreviations[i].value).toFixed(2) + abbreviations[i].symbol;
                 }
             }
-
             return num.toFixed(2);
         }
 
-        // Check if user is logged in
         function checkLogin() {
             const username = localStorage.getItem('username');
             if (!username) {
@@ -362,7 +342,6 @@
             return username;
         }
 
-        // Update balance function
         async function updateBalance(newBalance) {
             const username = checkLogin();
             const playerRef = doc(db, "users", username);
@@ -370,12 +349,10 @@
             return newBalance;
         }
 
-        // Initialize player function
         async function initializePlayer() {
             const username = checkLogin();
             const playerRef = doc(db, "users", username);
             const playerDoc = await getDoc(playerRef);
-            
             if (!playerDoc.exists()) {
                 localStorage.removeItem('username');
                 localStorage.removeItem('userId');
@@ -385,42 +362,40 @@
                 window.playerBalance = userData.balance;
                 window.isVIP = userData.isVIP || false;
                 window.lastFreeReward = userData.lastFreeReward || 0;
-                
-                // Add real-time listener for balance updates
                 onSnapshot(playerRef, (doc) => {
                     const userData = doc.data();
                     window.playerBalance = userData.balance;
+                    window.isVIP = userData.isVIP || false;
                     document.querySelector('.balance-amount').textContent = '$' + formatLargeNumber(userData.balance);
+                    const welcomeHeading = document.getElementById('welcomeHeading');
+                    const welcomeSubtext = document.getElementById('welcomeSubtext');
+                    const username = localStorage.getItem('username') || 'Player';
+                    if (window.isVIP) {
+                        welcomeHeading.innerHTML = `Welcome back, <span id="welcomeUsername">${username}</span>! 👑`;
+                        welcomeSubtext.textContent = 'VIP Member - Enjoy exclusive benefits!';
+                    } else {
+                        welcomeHeading.innerHTML = `Welcome back, <span id="welcomeUsername">${username}</span>! 🎮`;
+                        welcomeSubtext.textContent = 'Ready to play? Choose your game below!';
+                    }
+                    setupAddFundsButton(window.isVIP);
                 });
-                
-                setupAddFundsButton(window.isVIP);
             }
-            
-            // Initial balance display
             document.querySelector('.balance-amount').textContent = '$' + formatLargeNumber(window.playerBalance);
         }
 
         function setupAddFundsButton(isVIP) {
             const freeButton = document.querySelector('.free-button');
             const vipButton = document.querySelector('.vip-button');
-            
             if (isVIP) {
-                // Hide free button
                 freeButton.style.display = 'none';
-                
-                // Setup VIP button
                 vipButton.style.display = 'flex';
                 vipButton.style.alignItems = 'center';
                 vipButton.style.gap = '4px';
-                
-                // Setup live balance monitoring for VIP button
                 const username = checkLogin();
                 const playerRef = doc(db, "users", username);
                 onSnapshot(playerRef, (doc) => {
                     const userData = doc.data();
                     window.playerBalance = userData.balance;
-                    
-                    // Update button state based on current balance
                     if (window.playerBalance >= 5000000) {
                         vipButton.disabled = true;
                         vipButton.style.opacity = '0.5';
@@ -431,7 +406,6 @@
                         vipButton.style.cursor = 'pointer';
                     }
                 });
-                
                 vipButton.onclick = async (e) => {
                     e.preventDefault();
                     if (window.playerBalance < 5000000) {
@@ -440,27 +414,20 @@
                     }
                 };
             } else {
-                // Show free button, hide VIP button
                 freeButton.style.display = 'flex';
                 vipButton.style.display = 'none';
-
-                // Setup live monitoring for free button cooldown
                 const username = checkLogin();
                 const playerRef = doc(db, "users", username);
                 onSnapshot(playerRef, (doc) => {
                     const userData = doc.data();
                     window.lastFreeReward = userData.lastFreeReward || 0;
-                    
-                    // Update countdown every second
                     const updateCountdown = () => {
                         const now = Date.now();
-                        const cooldownTime = 3600000; // 1 hour in milliseconds
-                        
+                        const cooldownTime = 3600000;
                         if (now - window.lastFreeReward < cooldownTime) {
                             freeButton.disabled = true;
                             freeButton.style.opacity = '0.5';
                             freeButton.style.cursor = 'not-allowed';
-                            
                             const timeLeft = Math.ceil((cooldownTime - (now - window.lastFreeReward)) / 1000);
                             freeButton.textContent = `Wait ${timeLeft} sec`;
                         } else {
@@ -470,20 +437,14 @@
                             freeButton.textContent = 'Free $1,000';
                         }
                     };
-
-                    // Initial update
                     updateCountdown();
-                    
-                    // Update every second
                     const countdownInterval = setInterval(updateCountdown, 1000);
-                    
-                    // Cleanup interval when snapshot updates
                     return () => clearInterval(countdownInterval);
                 });
                 freeButton.onclick = async (e) => {
                     e.preventDefault();
                     const now = Date.now();
-                    if (now - window.lastFreeReward >= 3600000) { // Check if 1 hour has passed
+                    if (now - window.lastFreeReward >= 3600000) {
                         const newBalance = window.playerBalance + 1000;
                         await setDoc(playerRef, {
                             balance: newBalance,
@@ -496,12 +457,10 @@
             }
         }
 
-        // Remove any existing balance update handlers
         if (window.balanceUpdateHandler) {
             window.balanceUpdateHandler();
         }
 
-        // Make everything globally available
         window.db = db;
         window.doc = doc;
         window.updateBalance = updateBalance;
@@ -509,10 +468,8 @@
         window.initializePlayer = initializePlayer;
         window.formatLargeNumber = formatLargeNumber;
 
-        // Initialize player balance
         await initializePlayer();
 
-        // Online presence tracking
         const username = checkLogin();
         const playerRef = ref(database, `online/${username}`);
         const onlineRef = ref(database, 'online');
@@ -537,6 +494,12 @@
                 });
             }
         });
+
+        document.getElementById('welcomeUsername').textContent = localStorage.getItem('username') || 'Player';
+        if (window.isVIP) {
+            document.getElementById('welcomeHeading').innerHTML = `Welcome back, <span id="welcomeUsername">${localStorage.getItem('username') || 'Player'}</span>! 👑`;
+            document.getElementById('welcomeSubtext').textContent = 'VIP Member - Enjoy exclusive benefits!';
+        }
     </script>
 </body>
 </html>
