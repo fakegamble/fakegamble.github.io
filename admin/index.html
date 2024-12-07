@@ -657,6 +657,7 @@
                 if (whitelistedIP === currentIP) {
                     document.getElementById('loginOverlay').style.display = 'none';
                     sessionStorage.setItem('adminAuth', btoa(Date.now()));
+                    initializeAdmin();
                     return false;
                 }
                 
@@ -671,6 +672,7 @@
                     document.getElementById('loginOverlay').style.display = 'none';
                     sessionStorage.setItem('adminAuth', btoa(Date.now()));
                     sessionStorage.removeItem('failedAttempts');
+                    initializeAdmin();
                 } else {
                     const newFailedAttempts = failedAttempts + 1;
                     sessionStorage.setItem('failedAttempts', newFailedAttempts);
@@ -697,6 +699,13 @@
 
         window.checkAuth = async function() {
             const authToken = sessionStorage.getItem('adminAuth');
+            
+            const username = localStorage.getItem('username');
+            if (username !== 'admin') {
+                window.location.href = 'https://fakegamble.github.io/';
+                return;
+            }
+
             if (!authToken) {
                 try {
                     const response = await fetch('https://api.ipify.org?format=json');
@@ -710,6 +719,7 @@
                     if (whitelistedIP === currentIP) {
                         document.getElementById('loginOverlay').style.display = 'none';
                         sessionStorage.setItem('adminAuth', btoa(Date.now()));
+                        initializeAdmin();
                     } else {
                         document.getElementById('loginOverlay').style.display = 'flex';
                     }
@@ -719,7 +729,13 @@
                 }
             } else {
                 document.getElementById('loginOverlay').style.display = 'none';
+                initializeAdmin();
             }
+        }
+
+        function initializeAdmin() {
+            initializePlayersList();
+            listenForBalanceUpdates();
         }
 
         function initializePlayersList() {
@@ -916,8 +932,6 @@
 
 
         checkAuth();
-        initializePlayersList();
-        listenForBalanceUpdates();
     </script>
 </body>
 </html>
