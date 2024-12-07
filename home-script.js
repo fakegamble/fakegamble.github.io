@@ -56,6 +56,11 @@ class GameHub {
         onSnapshot(playerRef, (doc) => {
             if (doc.exists()) {
                 window.playerBalance = doc.data().balance;
+                if (isNaN(window.playerBalance)) {
+                    console.warn("Invalid balance detected, resetting to $1");
+                    window.playerBalance = 1;
+                    updateBalance(1);
+                }
                 this.updateBalanceDisplay();
             } else {
                 localStorage.removeItem('username');
