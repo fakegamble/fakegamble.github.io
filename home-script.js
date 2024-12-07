@@ -7,6 +7,7 @@ class GameHub {
         this.addEventListeners();
         this.initializeWelcomeMessage();
         this.initializeSettings();
+        this.setupBalanceListener();
         
         if (this.getTimeLeftOnCooldown() > 0) {
             this.startCooldownTimer();
@@ -44,11 +45,31 @@ class GameHub {
         mainContent.insertBefore(welcomeDiv, mainContent.firstChild);
     }
 
+    setupBalanceListener() {
+        const username = localStorage.getItem('username');
+        if (!username) {
+            window.location.href = '/login.html';
+            return;
+        }
+
+        const playerRef = doc(db, "users", username);
+        onSnapshot(playerRef, (doc) => {
+            if (doc.exists()) {
+                window.playerBalance = doc.data().balance;
+                this.updateBalanceDisplay();
+            } else {
+                localStorage.removeItem('username');
+                localStorage.removeItem('userId');
+                window.location.href = '/login.html';
+            }
+        });
+    }
+
     updateBalanceDisplay() {
         const balanceElement = document.querySelector('.balance-amount');
         if (!balanceElement) return;
         
-        const currentBalance = window.playerBalance || this.balance;
+        const currentBalance = window.playerBalance || 0;
         balanceElement.textContent = this.formatLargeNumber(currentBalance);
         
         balanceElement.classList.remove('balance-update');

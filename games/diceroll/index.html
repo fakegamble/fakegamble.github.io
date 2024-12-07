@@ -98,75 +98,45 @@
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getDatabase, ref, onValue, onDisconnect, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        const _0x3f8b2c = {
-            _k: 'QWlhU3lCV1N2Q1VnbGw4T2NvdWJDaTBHZUF2Vm5DV18zYkVzV3c=',
-            _d: 'dmlld3MtZDBiM2Iud2ViLmFwcA==',
-            _u: 'aHR0cHM6Ly92aWV3cy1kMGIzYi1kZWZhdWx0LXJ0ZGIuZmlyZWJhc2Vpby5jb20=',
-            _p: 'dmlld3MtZDBiM2I=',
-            _s: 'dmlld3MtZDBiM2IuZmlyZWJhc2VzdG9yYWdlLmFwcA==',
-            _m: 'Mjc4NTU0MTAwOTc=',
-            _a: 'MToyNzg1NTQxMDA5Nzp3ZWI6MDJlN2E0OWEwMWJlMTBkZGMzMjM5MA==',
-            _t: 'Ry01RFBEWllEUkZK'
-        };
-
         const firebaseConfig = {
-            apiKey: atob(_0x3f8b2c._k),
-            authDomain: atob(_0x3f8b2c._d),
-            databaseURL: atob(_0x3f8b2c._u),
-            projectId: atob(_0x3f8b2c._p),
-            storageBucket: atob(_0x3f8b2c._s),
-            messagingSenderId: atob(_0x3f8b2c._m),
-            appId: atob(_0x3f8b2c._a),
-            measurementId: atob(_0x3f8b2c._t)
+            apiKey: "AIzaSyBWSvCUgql8OcoubCi0GeAvVnCW_3bEsWw",
+            authDomain: "views-d0b3b.firebaseapp.com",
+            databaseURL: "https://views-d0b3b-default-rtdb.firebaseio.com",
+            projectId: "views-d0b3b",
+            storageBucket: "views-d0b3b.appspot.com",
+            messagingSenderId: "27855410097",
+            appId: "1:27855410097:web:02e7a49a01be10ddc32390",
+            measurementId: "G-5DPDZYDRFJ"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const database = getDatabase(app);
 
-        // Generate or get username
-        function checkLogin() {
-            const username = localStorage.getItem('username');
-            if (!username) {
-                window.location.href = '/login.html';
-            }
-            return username;
-        }
-
-        // Make everything globally available first
+        // Make everything globally available
         window.db = db;
         window.doc = doc;
+        window.getDoc = getDoc;
+        window.setDoc = setDoc;
         window.onSnapshot = onSnapshot;
-        
-        // Update balance function
-        window.updateBalance = async function(newBalance) {
-            window.playerBalance = newBalance;
-            document.querySelector('.balance-amount').textContent = `$${window.playerBalance.toFixed(2)}`;
-            
-            try {
-                const username = checkLogin();
-                const playerRef = doc(db, "users", username);
-                await setDoc(playerRef, { balance: window.playerBalance }, { merge: true });
-            } catch (error) {
-                console.error("Error updating balance:", error);
-            }
-        };
 
         // Initialize player balance
         window.initializePlayer = async function() {
-            const username = checkLogin();
+            const username = localStorage.getItem('username');
+            if (!username) {
+                window.location.href = '/login.html';
+                return;
+            }
+
             const playerRef = doc(db, "users", username);
-            
             try {
                 const docSnap = await getDoc(playerRef);
                 if (docSnap.exists()) {
                     window.playerBalance = docSnap.data().balance;
                 } else {
-                    // If user document doesn't exist, redirect to login
                     localStorage.removeItem('username');
-                    localStorage.removeItem('userId');
                     window.location.href = '/login.html';
+                    return;
                 }
                 document.querySelector('.balance-amount').textContent = `$${window.playerBalance.toFixed(2)}`;
                 window.dispatchEvent(new Event('balanceInitialized'));
@@ -176,35 +146,77 @@
             }
         };
 
+        window.updateBalance = async function(newBalance) {
+            const username = localStorage.getItem('username');
+            if (!username) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            window.playerBalance = newBalance;
+            document.querySelector('.balance-amount').textContent = `$${window.playerBalance.toFixed(2)}`;
+            
+            try {
+                const playerRef = doc(db, "users", username);
+                await setDoc(playerRef, { balance: window.playerBalance }, { merge: true });
+            } catch (error) {
+                console.error("Error updating balance:", error);
+            }
+        };
+
         // Initialize on page load
         window.initializePlayer();
 
         // Online presence tracking
-        const deviceId = localStorage.getItem('username');
-        const playerRef = ref(database, `online/${deviceId}`);
-        const onlineRef = ref(database, 'online');
+        const username = localStorage.getItem('username');
+        if (username) {
+            const playerRef = ref(database, `online/${username}`);
+            const onlineRef = ref(database, 'online');
 
-        onValue(onlineRef, (snapshot) => {
-            const onlinePlayers = snapshot.val() || {};
-            const uniqueDevices = new Set();
-            Object.entries(onlinePlayers).forEach(([id, status]) => {
-                if (status.online) {
-                    uniqueDevices.add(id);
+            // Create a hidden div for online count if it doesn't exist
+            let onlinePlayersElement = document.getElementById('onlinePlayers');
+            if (!onlinePlayersElement) {
+                onlinePlayersElement = document.createElement('span');
+                onlinePlayersElement.id = 'onlinePlayers';
+                onlinePlayersElement.style.display = 'none';
+                document.body.appendChild(onlinePlayersElement);
+            }
+
+            // Track online players
+            onValue(onlineRef, (snapshot) => {
+                const onlinePlayers = snapshot.val() || {};
+                const uniqueUsers = new Set();
+                
+                Object.entries(onlinePlayers).forEach(([id, status]) => {
+                    if (status.online) {
+                        uniqueUsers.add(id);
+                    }
+                });
+                
+                if (onlinePlayersElement) {
+                    onlinePlayersElement.textContent = uniqueUsers.size;
                 }
             });
-            document.getElementById('onlinePlayers').textContent = uniqueDevices.size;
-        });
 
-        onValue(ref(database, '.info/connected'), (snapshot) => {
-            if (snapshot.val() === true && deviceId) {
-                onDisconnect(playerRef).remove();
-                set(playerRef, {
-                    online: true,
-                    lastSeen: serverTimestamp()
-                });
-            }
-        });
+            // Update presence on connection state change
+            onValue(ref(database, '.info/connected'), (snapshot) => {
+                if (snapshot.val() === true) {
+                    // Remove presence on disconnect
+                    onDisconnect(playerRef).remove();
+                    
+                    // Set presence
+                    set(playerRef, {
+                        online: true,
+                        lastSeen: serverTimestamp()
+                    });
+                }
+            });
+        }
     </script>
     <script src="diceroll.js"></script>
+    <div class="online-counter" style="display: none;">
+        <span class="material-icons">group</span>
+        <span id="onlinePlayers">0</span> online
+    </div>
 </body>
 </html> 

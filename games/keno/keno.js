@@ -19,17 +19,6 @@ class KenoGame {
             5: 20    // Lowered from 100
         };
 
-        // Add balance change listener
-        Object.defineProperty(window, 'playerBalance', {
-            get: function() {
-                return this._playerBalance;
-            },
-            set: function(newValue) {
-                this._playerBalance = newValue;
-                this.updateBalanceDisplay();
-            }.bind(this)
-        });
-        
         if (typeof window.playerBalance === 'undefined') {
             window.addEventListener('balanceInitialized', () => {
                 this.initialize();
@@ -54,19 +43,15 @@ class KenoGame {
             window.location.href = '/login.html';
             return;
         }
+        
         const playerRef = window.doc(window.db, "users", username);
         
         window.onSnapshot(playerRef, (doc) => {
             if (doc.exists()) {
-                const newBalance = doc.data().balance;
-                if (newBalance !== window.playerBalance) {
-                    window.playerBalance = newBalance;
-                    this.updateBalanceDisplay();
-                }
+                window.playerBalance = doc.data().balance;
+                this.updateBalanceDisplay();
             } else {
-                // If user document doesn't exist, redirect to login
                 localStorage.removeItem('username');
-                localStorage.removeItem('userId');
                 window.location.href = '/login.html';
             }
         });
@@ -218,9 +203,7 @@ class KenoGame {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
-        document.querySelectorAll('.balance-amount').forEach(element => {
-            element.textContent = `$${formattedBalance}`;
-        });
+        document.querySelector('.balance-amount').textContent = `$${formattedBalance}`;
     }
 
     adjustBet(multiplier) {
@@ -233,6 +216,12 @@ class KenoGame {
     }
 
     async saveBalance() {
+        const username = localStorage.getItem('username');
+        if (!username) {
+            window.location.href = '/login.html';
+            return;
+        }
+
         try {
             await window.updateBalance(window.playerBalance);
         } catch (error) {

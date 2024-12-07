@@ -1,19 +1,5 @@
 class MinesGame {
     constructor() {
-        // Wait for Firebase and balance initialization before checking login
-        window.addEventListener('balanceInitialized', () => {
-            const username = localStorage.getItem('username');
-            const userId = localStorage.getItem('userId');
-            if (!username || !userId) {
-                window.location.href = '/login.html';
-                return;
-            }
-            
-            this.initializeGame();
-        });
-    }
-
-    initializeGame() {
         this.gridSize = 5;
         this.totalTiles = this.gridSize * this.gridSize;
         this.mines = [];
@@ -49,29 +35,6 @@ class MinesGame {
             21: 76.00
         };
 
-        // Modify the balance change listener
-        Object.defineProperty(window, 'playerBalance', {
-            get: function() {
-                return parseFloat(localStorage.getItem('gameBalance')) || 0;
-            },
-            set: function(newValue) {
-                localStorage.setItem('gameBalance', newValue.toFixed(2));
-            }
-        });
-
-        // Initialize player data
-        const playerRef = window.doc(window.db, "users", username);
-        window.onSnapshot(playerRef, (doc) => {
-            if (doc.exists()) {
-                const data = doc.data();
-                if (data.balance !== undefined) {
-                    window.playerBalance = data.balance;
-                    this.updateBalanceDisplay();
-                    window.dispatchEvent(new Event('balanceInitialized'));
-                }
-            }
-        });
-
         this.initializeDOM();
         this.initializeEventListeners();
         this.setupBalanceListener();
@@ -86,17 +49,13 @@ class MinesGame {
             window.location.href = '/login.html';
             return;
         }
-        const playerRef = window.doc(window.db, "users", username);
-        
-        window.onSnapshot(playerRef, (doc) => {
+
+        const playerRef = doc(db, "users", username);
+        onSnapshot(playerRef, (doc) => {
             if (doc.exists()) {
-                const newBalance = doc.data().balance;
-                if (newBalance !== window.playerBalance) {
-                    window.playerBalance = newBalance;
-                    this.updateBalanceDisplay();
-                }
+                window.playerBalance = doc.data().balance;
+                this.updateBalanceDisplay();
             } else {
-                // If user document doesn't exist, redirect to login
                 localStorage.removeItem('username');
                 localStorage.removeItem('userId');
                 window.location.href = '/login.html';
@@ -164,6 +123,12 @@ class MinesGame {
     }
 
     async startGame() {
+        const username = localStorage.getItem('username');
+        if (!username) {
+            window.location.href = '/login.html';
+            return;
+        }
+
         if (this.betAmount <= 0) {
             this.showResult('Error', 'Invalid bet amount', true);
             return;
@@ -180,7 +145,7 @@ class MinesGame {
         }
 
         window.playerBalance -= this.betAmount;
-        await updateBalance(window.playerBalance);
+        await window.updateBalance(window.playerBalance);
         this.gameActive = true;
         this.revealed.clear();
         this.currentProfit = 0;
@@ -249,10 +214,15 @@ class MinesGame {
     async cashOut() {
         if (!this.gameActive) return;
         
-        window.playerBalance += this.currentProfit;
-        await updateBalance(window.playerBalance);
+        const username = localStorage.getItem('username');
+        if (!username) {
+            window.location.href = '/login.html';
+            return;
+        }
         
-        // Show all mines before ending the game
+        window.playerBalance += this.currentProfit;
+        await window.updateBalance(window.playerBalance);
+        
         this.mines.forEach(index => {
             const cell = this.gameGrid.children[index];
             cell.classList.add('mine');
@@ -262,8 +232,14 @@ class MinesGame {
         this.endGame();
     }
 
-    gameOver(won) {
+    async gameOver(won) {
         this.gameActive = false;
+        
+        const username = localStorage.getItem('username');
+        if (!username) {
+            window.location.href = '/login.html';
+            return;
+        }
         
         this.mines.forEach(index => {
             const cell = this.gameGrid.children[index];
@@ -272,7 +248,7 @@ class MinesGame {
 
         if (!won) {
             this.showResult('Game Over', `-$${this.betAmount.toFixed(2)}`);
-            updateBalance(window.playerBalance);
+            await window.updateBalance(window.playerBalance);
         }
 
         this.endGame();
@@ -333,9 +309,7 @@ class MinesGame {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
-        document.querySelectorAll('.balance-amount').forEach(element => {
-            element.textContent = `$${formattedBalance}`;
-        });
+        document.querySelector('.balance-amount').textContent = `$${formattedBalance}`;
     }
 
     adjustBet(multiplier) {
@@ -427,13 +401,19 @@ class MinesGame {
     }
 
     async addMoney(amount) {
+        const username = localStorage.getItem('username');
+        if (!username) {
+            window.location.href = '/login.html';
+            return;
+        }
+
         if (typeof amount !== 'number' || isNaN(amount)) {
             console.log('Please provide a valid number');
             return;
         }
         
         window.playerBalance += amount;
-        await updateBalance(window.playerBalance);
+        await window.updateBalance(window.playerBalance);
         this.updateBalanceDisplay();
         console.log(`Successfully added $${amount.toFixed(2)} to balance`);
     }

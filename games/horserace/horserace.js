@@ -14,17 +14,6 @@ class HorseRaceGame {
             3: 4,
             4: 5
         };
-
-        // Add balance change listener
-        Object.defineProperty(window, 'playerBalance', {
-            get: function() {
-                return this._playerBalance;
-            },
-            set: function(newValue) {
-                this._playerBalance = newValue;
-                this.updateBalanceDisplay();
-            }.bind(this)
-        });
         
         if (typeof window.playerBalance === 'undefined') {
             window.addEventListener('balanceInitialized', () => {
@@ -38,33 +27,8 @@ class HorseRaceGame {
     initialize() {
         this.initializeDOM();
         this.initializeEventListeners();
-        this.setupBalanceListener();
-        this.updateBalanceDisplay();
         this.updateStats();
-    }
-
-    setupBalanceListener() {
-        const username = localStorage.getItem('username');
-        if (!username) {
-            window.location.href = '/login.html';
-            return;
-        }
-        const playerRef = window.doc(window.db, "users", username);
-        
-        window.onSnapshot(playerRef, (doc) => {
-            if (doc.exists()) {
-                const newBalance = doc.data().balance;
-                if (newBalance !== window.playerBalance) {
-                    window.playerBalance = newBalance;
-                    this.updateBalanceDisplay();
-                }
-            } else {
-                // If user document doesn't exist, redirect to login
-                localStorage.removeItem('username');
-                localStorage.removeItem('userId');
-                window.location.href = '/login.html';
-            }
-        });
+        this.updateBalanceDisplay();
     }
 
     initializeDOM() {
@@ -102,7 +66,13 @@ class HorseRaceGame {
         window.playerBalance -= this.betAmount;
         await window.updateBalance(window.playerBalance);
         this.updateBalanceDisplay();
+        
+        // Disable all betting controls
         this.actionButton.disabled = true;
+        this.betInput.disabled = true;
+        this.horseButtons.forEach(btn => btn.disabled = true);
+        document.querySelector('.half-btn').disabled = true;
+        document.querySelector('.double-btn').disabled = true;
 
         // Reset horses to starting position
         this.horses.forEach(horse => {
@@ -136,7 +106,13 @@ class HorseRaceGame {
     async endRace(winningHorse) {
         this.gamesPlayed++;
         this.gameActive = false;
+        
+        // Re-enable all betting controls
         this.actionButton.disabled = false;
+        this.betInput.disabled = false;
+        this.horseButtons.forEach(btn => btn.disabled = false);
+        document.querySelector('.half-btn').disabled = false;
+        document.querySelector('.double-btn').disabled = false;
 
         if (winningHorse === this.selectedHorse) {
             this.gamesWon++;
@@ -188,9 +164,7 @@ class HorseRaceGame {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
-        document.querySelectorAll('.balance-amount').forEach(element => {
-            element.textContent = `$${formattedBalance}`;
-        });
+        document.querySelector('.balance-amount').textContent = `$${formattedBalance}`;
     }
 
     adjustBet(multiplier) {

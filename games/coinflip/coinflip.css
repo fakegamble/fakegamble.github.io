@@ -172,3 +172,27 @@
 
     .balance-amount {
         font-size: 1rem;
+        text-align: right;
+        flex: 1;
+    }
+
+    .balance-display.scrolled {
+        opacity: 0.3;
+    }
+
+    .balance-display:hover {
+        opacity: 1;
+    }
+}
+
+.online-counter {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.online-counter .material-icons {
+    font-size: 1.1rem;
+}

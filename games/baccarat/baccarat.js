@@ -7,17 +7,6 @@ class BaccaratGame {
         
         this.gamesPlayed = parseInt(localStorage.getItem('baccarat_gamesPlayed')) || 0;
         this.gamesWon = parseInt(localStorage.getItem('baccarat_gamesWon')) || 0;
-
-        // Add balance change listener
-        Object.defineProperty(window, 'playerBalance', {
-            get: function() {
-                return this._playerBalance;
-            },
-            set: function(newValue) {
-                this._playerBalance = newValue;
-                this.updateBalanceDisplay();
-            }.bind(this)
-        });
         
         if (typeof window.playerBalance === 'undefined') {
             window.addEventListener('balanceInitialized', () => {
@@ -42,6 +31,7 @@ class BaccaratGame {
             window.location.href = '/login.html';
             return;
         }
+        
         const playerRef = window.doc(window.db, "users", username);
         
         window.onSnapshot(playerRef, (doc) => {
@@ -49,9 +39,7 @@ class BaccaratGame {
                 window.playerBalance = doc.data().balance;
                 this.updateBalanceDisplay();
             } else {
-                // If user document doesn't exist, redirect to login
                 localStorage.removeItem('username');
-                localStorage.removeItem('userId');
                 window.location.href = '/login.html';
             }
         });
@@ -63,9 +51,7 @@ class BaccaratGame {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
-        document.querySelectorAll('.balance-amount').forEach(element => {
-            element.textContent = `$${formattedBalance}`;
-        });
+        document.querySelector('.balance-amount').textContent = `$${formattedBalance}`;
     }
 
     initializeDOM() {
