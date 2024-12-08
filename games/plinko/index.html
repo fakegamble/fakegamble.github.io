@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fake Gamble | Plinko</title>
+    <link rel="stylesheet" href="plinko.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+    <meta name="theme-color" content="#0f172a">
+</head>
+<body>
+    <div class="game-wrapper">
+        <div class="sidebar">
+            <div class="sidebar-top">
+                <div class="bet-panel">
+                    <div class="amount-control">
+                        <label>Bet Amount</label>
+                        <div class="amount-input">
+                            <input type="number" id="betAmount" value="1.00" step="0.01">
+                            <div class="amount-modifiers">
+                                <button class="modifier-btn half-btn">½</button>
+                                <button class="modifier-btn double-btn">2×</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="actionButton" class="action-btn">Drop Ball</button>
+
+                <div class="balance-display">
+                    <span class="balance-label">Balance</span>
+                    <span class="balance-amount">$100.00</span>
+                </div>
+
+                <div class="game-info">
+                    <div class="win-rate">
+                        <span class="win-rate-label">Win Rate</span>
+                        <span class="win-rate-value">0.0%</span>
+                    </div>
+                    <div class="total-played">
+                        <span class="total-played-label">Games Played</span>
+                        <span class="total-played-value">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div id="plinko-board" class="plinko-board">
+                <div class="multiplier" style="left: 146px;">76x</div>
+                <div class="multiplier" style="left: 196px;">10x</div>
+                <div class="multiplier" style="left: 246px;">3x</div>
+                <div class="multiplier" style="left: 296px;">0.9x</div>
+                <div class="multiplier" style="left: 346px;">0.3x</div>
+                <div class="multiplier" style="left: 396px;">0.2x</div>
+                <div class="multiplier" style="left: 446px;">0.3x</div>
+                <div class="multiplier" style="left: 496px;">0.9x</div>
+                <div class="multiplier" style="left: 546px;">3x</div>
+                <div class="multiplier" style="left: 596px;">10x</div>
+                <div class="multiplier" style="left: 646px;">76x</div>
+            </div>
+        </div>
+
+        <div class="result-overlay">
+            <div class="result-content">
+                <div class="result-text-wrapper">
+                    <span class="result-text"></span>
+                    <span class="result-amount"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getDatabase, ref, onValue, onDisconnect, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWSvCUgql8OcoubCi0GeAvVnCW_3bEsWw",
+            authDomain: "views-d0b3b.firebaseapp.com",
+            databaseURL: "https://views-d0b3b-default-rtdb.firebaseio.com",
+            projectId: "views-d0b3b",
+            storageBucket: "views-d0b3b.appspot.com",
+            messagingSenderId: "27855410097",
+            appId: "1:27855410097:web:02e7a49a01be10ddc32390",
+            measurementId: "G-5DPDZYDRFJ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const database = getDatabase(app);
+
+        // Make everything globally available
+        window.db = db;
+        window.doc = doc;
+        window.getDoc = getDoc;
+        window.setDoc = setDoc;
+        window.onSnapshot = onSnapshot;
+
+        // Initialize player balance
+        window.initializePlayer = async function() {
+            const username = localStorage.getItem('username');
+            if (!username) {
+                window.location.href = '/login/';
+                return;
+            }
+
+            const playerRef = doc(db, "users", username);
+            try {
+                const docSnap = await getDoc(playerRef);
+                if (docSnap.exists()) {
+                    window.playerBalance = docSnap.data().balance;
+                } else {
+                    localStorage.removeItem('username');
+                    window.location.href = '/login/';
+                    return;
+                }
+                document.querySelector('.balance-amount').textContent = `$${window.playerBalance.toFixed(2)}`;
+                window.dispatchEvent(new Event('balanceInitialized'));
+            } catch (error) {
+                console.error("Error initializing player:", error);
+                window.location.href = '/login/';
+            }
+        };
+
+        window.updateBalance = async function(newBalance) {
+            const username = localStorage.getItem('username');
+            if (!username) {
+                window.location.href = '/login/';
+                return;
+            }
+
+            window.playerBalance = newBalance;
+            const balanceElements = document.querySelectorAll('.balance-amount');
+            balanceElements.forEach(element => {
+                element.textContent = `$${window.playerBalance.toFixed(2)}`;
+            });
+            
+            try {
+                const playerRef = doc(db, "users", username);
+                await setDoc(playerRef, { balance: window.playerBalance }, { merge: true });
+            } catch (error) {
+                console.error("Error updating balance:", error);
+            }
+        };
+
+        // Initialize on page load
+        window.initializePlayer();
+    </script>
+    <script src="plinko.js"></script>
+</body>
+</html> 
