@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta property="og:title" content="Fake Gamble - Mines bomb game">
+    <meta property="og:title" content="Fake Gamble - Crash game">
     <meta property="og:description" content="Play free casino games with virtual currency. No real money involved, just pure entertainment!">
     <meta property="og:image" content="/assets/favicon.png">
     <meta property="og:url" content="https://fakegamble.github.io/">
     <meta property="og:type" content="website">
-    <title>Fake Gamble | Mines </title>
-    <link rel="stylesheet" href="mines.css">
+    <title>Fake Gamble | Crash</title>
+    <link rel="stylesheet" href="crash.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#1a2c38">
+    <meta name="theme-color" content="#0f172a">
 </head>
 <body>
     <div class="game-wrapper">
@@ -22,45 +22,26 @@
             <div class="sidebar-top">
                 <div class="bet-panel">
                     <div class="amount-control">
-                        <label>Amount</label>
+                        <label>Bet Amount</label>
                         <div class="amount-input">
-                            <input type="number" id="betAmount" value="0.00" step="0.01">
+                            <input type="number" id="betAmount" value="1.00" step="0.01">
                             <div class="amount-modifiers">
                                 <button class="modifier-btn half-btn">½</button>
                                 <button class="modifier-btn double-btn">2×</button>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="mines-control">
-                        <label>Mines</label>
-                        <select id="minesCount">
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3" selected>3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="6">6</option>
-                            <option value="7">7</option>
-                            <option value="8">8</option>
-                            <option value="9">9</option>
-                            <option value="10">10</option>
-                            <option value="11">11</option>
-                            <option value="12">12</option>
-                            <option value="13">13</option>
-                            <option value="14">14</option>
-                            <option value="15">15</option>
-                            <option value="16">16</option>
-                            <option value="17">17</option>
-                            <option value="18">18</option>
-                            <option value="19">19</option>
-                            <option value="20">20</option>
-                            <option value="21">21</option>
-                        </select>
+
+                    <div class="auto-cashout">
+                        <label>Auto Cashout at (optional)</label>
+                        <div class="cashout-input">
+                            <input type="number" id="autoCashout" value="0" step="0.01" min="0" placeholder="0 = disabled">
+                            <span>×</span>
+                        </div>
                     </div>
                 </div>
 
-                <button id="actionButton" class="action-btn">Play</button>
+                <button id="actionButton" class="action-btn">Place Bet</button>
 
                 <div class="balance-display">
                     <span class="balance-label">Balance</span>
@@ -68,34 +49,46 @@
                 </div>
 
                 <div class="game-info">
-                    <div class="tiles-info">
-                        <span class="revealed-count">0</span>
-                        <span class="separator">/</span>
-                        <span class="total-tiles">25</span>
-                        <span class="tiles-label">Tiles</span>
+                    <div class="win-rate">
+                        <span class="win-rate-label">Win Rate</span>
+                        <span class="win-rate-value">0.0%</span>
                     </div>
-                    <div class="profit-info">
-                        <span class="profit-label">Profit</span>
-                        <span class="profit-amount">$0.00</span>
+                    <div class="total-played">
+                        <span class="total-played-label">Games Played</span>
+                        <span class="total-played-value">0</span>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="main-content">
-            <div class="game-grid"></div>
+            <div class="crash-game">
+                <canvas id="gameCanvas"></canvas>
+                <div class="multiplier-container">
+                    <div class="multiplier">1.00×</div>
+                    <div class="potential-profit">$0.00</div>
+                </div>
+            </div>
+            
+            <div class="history">
+                <div class="history-label">Previous Crashes</div>
+                <div class="history-list"></div>
+            </div>
         </div>
-        <div class="result-overlay" id="resultOverlay">
+
+        <div class="result-overlay">
             <div class="result-content">
-                <div class="result-icon"></div>
                 <div class="result-text-wrapper">
                     <span class="result-text"></span>
                     <span class="result-amount"></span>
+                    <span class="result-subtext"></span>
                 </div>
             </div>
         </div>
     </div>
+
     <script type="module">
+        // Firebase initialization code (same as other games)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
             getFirestore, 
@@ -121,18 +114,16 @@
         const db = getFirestore(app);
         const database = getDatabase(app);
 
-        // Make everything globally available
         window.db = db;
         window.doc = doc;
         window.getDoc = getDoc;
         window.setDoc = setDoc;
         window.onSnapshot = onSnapshot;
 
-        // Initialize player balance
         window.initializePlayer = async function() {
             const username = localStorage.getItem('username');
             if (!username) {
-                window.location.href = '/login.html';
+                window.location.href = '/login/';
                 return;
             }
 
@@ -143,21 +134,21 @@
                     window.playerBalance = docSnap.data().balance;
                 } else {
                     localStorage.removeItem('username');
-                    window.location.href = '/login.html';
+                    window.location.href = '/login/';
                     return;
                 }
                 document.querySelector('.balance-amount').textContent = `$${window.playerBalance.toFixed(2)}`;
                 window.dispatchEvent(new Event('balanceInitialized'));
             } catch (error) {
                 console.error("Error initializing player:", error);
-                window.location.href = '/login.html';
+                window.location.href = '/login/';
             }
         };
 
         window.updateBalance = async function(newBalance) {
             const username = localStorage.getItem('username');
             if (!username) {
-                window.location.href = '/login.html';
+                window.location.href = '/login/';
                 return;
             }
 
@@ -172,7 +163,6 @@
             }
         };
 
-        // Initialize on page load
         window.initializePlayer();
 
         // Online presence tracking
@@ -181,7 +171,6 @@
             const playerRef = ref(database, `online/${username}`);
             const onlineRef = ref(database, 'online');
 
-            // Create a hidden div for online count if it doesn't exist
             let onlinePlayersElement = document.getElementById('onlinePlayers');
             if (!onlinePlayersElement) {
                 onlinePlayersElement = document.createElement('span');
@@ -190,7 +179,6 @@
                 document.body.appendChild(onlinePlayersElement);
             }
 
-            // Track online players
             onValue(onlineRef, (snapshot) => {
                 const onlinePlayers = snapshot.val() || {};
                 const uniqueUsers = new Set();
@@ -206,13 +194,9 @@
                 }
             });
 
-            // Update presence on connection state change
             onValue(ref(database, '.info/connected'), (snapshot) => {
                 if (snapshot.val() === true) {
-                    // Remove presence on disconnect
                     onDisconnect(playerRef).remove();
-                    
-                    // Set presence
                     set(playerRef, {
                         online: true,
                         lastSeen: serverTimestamp()
@@ -221,6 +205,6 @@
             });
         }
     </script>
-    <script src="mines.js"></script>
+    <script src="crash.js"></script>
 </body>
-</html>
+</html> 

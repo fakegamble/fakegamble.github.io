@@ -6,6 +6,9 @@ class GameHub {
         this.initializeSettings();
         this.setupBalanceListener();
         this.initializeHeaderScroll();
+        this.pinnedGames = JSON.parse(localStorage.getItem('pinnedGames')) || ['crash', 'slots'];
+        this.initializePinButtons();
+        this.initializePinnedGames();
     }
 
     initializeUI() {
@@ -330,6 +333,74 @@ class GameHub {
             }
         }
         return `$${num.toFixed(2)}`;
+    }
+
+    initializePinButtons() {
+        const gamesContainer = document.querySelector('.games-container');
+        const pinButtons = document.querySelectorAll('.pin-button');
+        
+        // Set initial pinned states
+        this.pinnedGames.forEach(gameId => {
+            const button = document.querySelector(`.pin-button[data-game="${gameId}"]`);
+            const gameCard = button?.closest('.game-card');
+            if (button && gameCard) {
+                button.classList.add('pinned');
+                gameCard.classList.add('pinned');
+                const pinnedIcon = document.createElement('span');
+                pinnedIcon.className = 'material-icons pinned-icon';
+                pinnedIcon.textContent = 'push_pin';
+                gameCard.querySelector('h3').appendChild(pinnedIcon);
+                // Move to the beginning of container
+                gamesContainer.prepend(gameCard);
+            }
+        });
+
+        // Add click handlers
+        pinButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const gameId = button.dataset.game;
+                const gameCard = button.closest('.game-card');
+                
+                if (this.pinnedGames.includes(gameId)) {
+                    // Unpin
+                    this.pinnedGames = this.pinnedGames.filter(id => id !== gameId);
+                    button.classList.remove('pinned');
+                    gameCard.classList.remove('pinned');
+                    const pinnedIcon = gameCard.querySelector('.pinned-icon');
+                    if (pinnedIcon) pinnedIcon.remove();
+                    // Optional: Move back to original position
+                    gamesContainer.appendChild(gameCard);
+                } else {
+                    // Pin
+                    this.pinnedGames.push(gameId);
+                    button.classList.add('pinned');
+                    gameCard.classList.add('pinned');
+                    const pinnedIcon = document.createElement('span');
+                    pinnedIcon.className = 'material-icons pinned-icon';
+                    pinnedIcon.textContent = 'push_pin';
+                    gameCard.querySelector('h3').appendChild(pinnedIcon);
+                    gamesContainer.prepend(gameCard);
+                }
+                
+                localStorage.setItem('pinnedGames', JSON.stringify(this.pinnedGames));
+            });
+        });
+    }
+
+    initializePinnedGames() {
+        const gamesContainer = document.querySelector('.games-container');
+        
+        this.pinnedGames.forEach(gameId => {
+            const gameCard = document.querySelector(`a[href="/games/${gameId}/"]`);
+            if (gameCard && gamesContainer) {
+                const pinnedIcon = gameCard.querySelector('.pinned-icon');
+                if (pinnedIcon) {
+                    gamesContainer.prepend(gameCard);
+                }
+            }
+        });
     }
 }
 

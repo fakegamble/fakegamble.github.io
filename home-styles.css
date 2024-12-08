@@ -241,6 +241,7 @@ body::before {
     overflow: hidden;
     text-decoration: none;
     backdrop-filter: blur(12px);
+    box-sizing: border-box;
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 
         0 8px 24px rgba(0, 0, 0, 0.2),
@@ -706,7 +707,7 @@ html {
     }
 }
 
-@media (max-height: 500px) and (orientation: landscape) {
+@media (max-width: 768px) and (orientation: landscape) {
     .header-content {
         padding: 0.5rem 1rem;
     }
@@ -1024,4 +1025,56 @@ html {
     color: var(--primary-color);
     text-decoration: none;
     text-shadow: 0 0 8px rgba(124, 58, 237, 0.3);
+}
+
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.pin-button {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: var(--text-secondary);
+    padding: 0.5rem;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pin-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+    transform: scale(1.1);
+}
+
+.pin-button.pinned {
+    background: var(--primary-color);
+    color: white;
+    transform: rotate(-45deg);
+}
+
+.pin-button.pinned:hover {
+    background: var(--accent-color);
+    transform: rotate(-45deg) scale(1.1);
+}
+
+.game-card.pinned {
+    border: 1px solid var(--primary-color);
+    box-shadow: 0 0 20px rgba(79, 70, 229, 0.2);
+    /* Add this to prevent size change */
+    margin: -1px;  /* Compensate for the border */
+}
+.pinned-icon {
+    font-size: 1rem;
+    color: var(--accent-color);
+    margin-left: 0.5rem;
+    transform: rotate(-45deg);
+    display: inline-block;
+    vertical-align: middle;
 }

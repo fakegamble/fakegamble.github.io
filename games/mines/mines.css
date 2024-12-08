@@ -52,34 +52,6 @@ body {
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
 }
 
-.mode-switch {
-    display: flex;
-    background: rgba(0, 0, 0, 0.3);
-    padding: 4px;
-    border-radius: 8px;
-}
-
-.mode-btn {
-    flex: 1;
-    padding: 0.5rem;
-    border: none;
-    border-radius: 3px;
-    background: transparent;
-    color: var(--text-color);
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.2s ease;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-}
-
-.mode-btn.active {
-    background: var(--accent-color);
-    color: var(--background-color);
-    box-shadow: 0 2px 8px rgba(0, 220, 130, 0.3);
-}
-
 .bet-panel {
     display: flex;
     flex-direction: column;

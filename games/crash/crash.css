@@ -1,0 +1,219 @@
+@import url('../blackjack/blackjack.css');
+
+.crash-game {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    background: var(--panel-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    margin-bottom: 1rem;
+    box-shadow: 
+        0 4px 6px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+#gameCanvas {
+    width: 100%;
+    height: 100%;
+}
+
+.multiplier-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.multiplier {
+    font-size: 3.5rem;
+    font-weight: bold;
+    color: var(--text-color);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.potential-profit {
+    font-size: 1.5rem;
+    color: var(--accent-color);
+    margin-top: 0.5rem;
+    font-weight: 500;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.multiplier.crashed + .potential-profit {
+    display: none;
+}
+
+.history {
+    background: var(--panel-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.history-label {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.history-list {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    padding-bottom: 0.5rem;
+    overflow-x: auto;
+}
+
+.history-item {
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    min-width: 100px;
+    text-align: center;
+    font-weight: 500;
+    animation: dealCard 0.3s ease;
+}
+
+.history-item.win {
+    background: linear-gradient(145deg, #00b468, #00dc82);
+    color: #000;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    box-shadow: 
+        0 4px 6px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+.history-item.lose {
+    background: linear-gradient(145deg, #dc2626, #ef4444);
+    color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    box-shadow: 
+        0 4px 6px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+.auto-cashout {
+    margin-top: 1rem;
+}
+
+.cashout-input {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+    padding: 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cashout-input input {
+    background: transparent;
+    border: none;
+    color: var(--text-color);
+    font-size: 1rem;
+    width: 100%;
+    outline: none;
+}
+
+.cashout-input span {
+    color: var(--text-secondary);
+}
+
+.action-btn {
+    width: 100%;
+    padding: 0.8rem;
+    background: linear-gradient(45deg, var(--accent-color), #00f090);
+    border: none;
+    border-radius: 4px;
+    color: var(--background-color);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 220, 130, 0.3);
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 220, 130, 0.4);
+}
+
+.action-btn.cashout {
+    background: linear-gradient(45deg, #ff9800, #ff6b00);
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .crash-game {
+        height: 300px;
+    }
+
+    .multiplier {
+        font-size: 2.5rem;
+    }
+
+    .history-item {
+        min-width: 60px;
+        padding: 0.4rem 0.6rem;
+    }
+}
+
+/* Animation for crash effect */
+@keyframes crash {
+    0% { 
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+    50% { 
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 0.8;
+    }
+    100% { 
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+
+.multiplier.crashed {
+    animation: crash 0.5s ease;
+    color: #ef4444;
+}
+
+.result-subtext {
+    display: block;
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+/* Update history items to handle larger numbers */
+.history-item {
+    padding: 0.5rem 0.8rem;
+    border-radius: var(--border-radius);
+    min-width: 85px;
+    text-align: center;
+    font-weight: 500;
+    animation: dealCard 0.3s ease;
+}
+
+/* Add special styling for rare high multipliers */
+.history-item[data-multiplier="10"] {
+    background: linear-gradient(145deg, #9333ea, #a855f7);
+    color: #fff;
+}
+
+.history-item[data-multiplier="100"] {
+    background: linear-gradient(145deg, #6366f1, #818cf8);
+    color: #fff;
+}
+
+.history-item[data-multiplier="1000"] {
+    background: linear-gradient(145deg, #f59e0b, #fbbf24);
+    color: #000;
+}
