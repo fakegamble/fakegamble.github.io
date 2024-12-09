@@ -327,7 +327,6 @@
             </div>
         </div>
     </div>
-    <script src="home-script.js"></script>
     <script>
         // Handle 404 redirects for GitHub Pages
         (function() {
@@ -342,8 +341,9 @@
             }
         })();
     </script>
-    </body>
-    </html>
+    <script src="home-script.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getDatabase, ref, onValue, onDisconnect, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
