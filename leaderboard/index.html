@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Global Leaderboard | Fake Gamble</title>
+    <link rel="stylesheet" href="../home-styles.css">
+    <link rel="stylesheet" href="leaderboard.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
+</head>
+<body>
+    <div class="page-wrapper">
+        <header class="main-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <a href="/" class="logo">
+                        <span class="material-icons">casino</span>
+                        <h1>Fake Gamble 💸</h1>
+                    </a>
+                </div>
+                <div class="header-right">
+                    <div class="online-counter">
+                        <span class="material-icons">group</span>
+                        <span id="onlinePlayers">0</span> online
+                    </div>
+                    <div class="balance-display">
+                        <span class="balance-label">Balance</span>
+                        <span class="balance-amount">$0.00</span>
+                        <button class="add-funds free-button">
+                            <span class="material-icons">add_circle</span>
+                            Get $1,000
+                        </button>
+                        <button class="add-funds vip-button" style="display: none;">
+                            <span class="material-icons">stars</span>
+                            Get $10M
+                        </button>
+                    </div>
+                    <button class="settings-btn">
+                        <span class="material-icons">settings</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="leaderboard-header">
+                <h2>Global Leaderboard</h2>
+            </div>
+
+            <div class="leaderboard-container">
+                <div class="leaderboard-loading">
+                    <div class="spinner"></div>
+                    <p>Loading rankings...</p>
+                </div>
+                <div class="leaderboard-table">
+                    <div class="table-header">
+                        <div class="rank-col">Rank</div>
+                        <div class="player-col">Player</div>
+                        <div class="balance-col">Balance</div>
+                    </div>
+                    <div class="table-body">
+                        <!-- Rankings will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div class="settings-modal" id="settingsModal">
+            <!-- Settings modal content (same as main page) -->
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, query, orderBy, limit, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getDatabase, ref, onValue, onDisconnect, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: atob('QWlhU3lCV1N2Q1VnbGw4T2NvdWJDaTBHZUF2Vm5DV18zYkVzV3c='),
+            authDomain: atob('dmlld3MtZDBiM2Iud2ViLmFwcA=='),
+            databaseURL: atob('aHR0cHM6Ly92aWV3cy1kMGIzYi1kZWZhdWx0LXJ0ZGIuZmlyZWJhc2Vpby5jb20='),
+            projectId: atob('dmlld3MtZDBiM2I='),
+            storageBucket: atob('dmlld3MtZDBiM2IuZmlyZWJhc2VzdG9yYWdlLmFwcA=='),
+            messagingSenderId: atob('Mjc4NTU0MTAwOTc='),
+            appId: atob('MToyNzg1NTQxMDA5Nzp3ZWI6MDJlN2E0OWEwMWJlMTBkZGMzMjM5MA=='),
+            measurementId: atob('Ry01RFBEWllEUkZK')
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const database = getDatabase(app);
+
+        window.db = db;
+        window.doc = doc;
+        window.collection = collection;
+        window.query = query;
+        window.where = where;
+        window.orderBy = orderBy;
+        window.limit = limit;
+        window.getDocs = getDocs;
+        window.onSnapshot = onSnapshot;
+        window.setDoc = setDoc;
+        window.getDoc = getDoc;
+        window.formatLargeNumber = function(num) {
+            if (typeof num !== 'number' || isNaN(num)) return '$0.00';
+            
+            const abbreviations = [
+                { value: 1e93, symbol: 'NvTg+' },
+                { value: 1e90, symbol: 'OcTg+' },
+                { value: 1e87, symbol: 'SptTg+' },
+                { value: 1e84, symbol: 'SxTg+' },
+                { value: 1e81, symbol: 'QiTg+' },
+                { value: 1e78, symbol: 'QTg+' },
+                { value: 1e75, symbol: 'TrTg+' },
+                { value: 1e72, symbol: 'DuTg+' },
+                { value: 1e69, symbol: 'UnTg+' },
+                { value: 1e66, symbol: 'Tg+' },
+                { value: 1e63, symbol: 'NvV+' },
+                { value: 1e60, symbol: 'OcV+' },
+                { value: 1e57, symbol: 'SptV+' },
+                { value: 1e54, symbol: 'SxV+' },
+                { value: 1e51, symbol: 'QVn+' },
+                { value: 1e48, symbol: 'QV+' },
+                { value: 1e45, symbol: 'TrV+' },
+                { value: 1e42, symbol: 'DuV+' },
+                { value: 1e39, symbol: 'UnV+' },
+                { value: 1e36, symbol: 'V+' },
+                { value: 1e33, symbol: 'D+' },
+                { value: 1e30, symbol: 'N+' },
+                { value: 1e27, symbol: 'O+' },
+                { value: 1e24, symbol: 'Sp+' },
+                { value: 1e21, symbol: 'S+' },
+                { value: 1e18, symbol: 'Qi+' },
+                { value: 1e15, symbol: 'Q+' },
+                { value: 1e12, symbol: 'T+' },
+                { value: 1e9, symbol: 'B+' },
+                { value: 1e6, symbol: 'M+' },
+                { value: 1e3, symbol: 'K+' }
+            ];
+            
+            for (let i = 0; i < abbreviations.length; i++) {
+                if (num >= abbreviations[i].value) {
+                    return '' + (num / abbreviations[i].value).toFixed(2) + abbreviations[i].symbol;
+                }
+            }
+            
+            return '$' + num.toFixed(2);
+        };
+
+        // Initialize player balance
+        async function initializePlayer() {
+            const username = localStorage.getItem('username');
+            if (!username) {
+                window.location.href = '/login/';
+                return;
+            }
+
+            const playerRef = doc(db, "users", username);
+            onSnapshot(playerRef, (doc) => {
+                if (doc.exists()) {
+                    const userData = doc.data();
+                    window.playerBalance = userData.balance;
+                    window.isVIP = userData.isVIP || false;
+                    window.lastFreeReward = userData.lastFreeReward || 0;
+                    document.querySelector('.balance-amount').textContent = 
+                        `${window.formatLargeNumber(userData.balance)}`;
+                    setupAddFundsButton(window.isVIP);
+                } else {
+                    localStorage.removeItem('username');
+                    window.location.href = '/login/';
+                }
+            });
+        }
+
+        function setupAddFundsButton(isVIP) {
+            const freeButton = document.querySelector('.free-button');
+            const vipButton = document.querySelector('.vip-button');
+            
+            if (isVIP) {
+                freeButton.style.display = 'none';
+                vipButton.style.display = 'flex';
+                vipButton.style.alignItems = 'center';
+                vipButton.style.gap = '4px';
+                
+                if (window.playerBalance >= 5000000) {
+                    vipButton.disabled = true;
+                    vipButton.style.opacity = '0.5';
+                    vipButton.style.cursor = 'not-allowed';
+                } else {
+                    vipButton.disabled = false;
+                    vipButton.style.opacity = '1';
+                    vipButton.style.cursor = 'pointer';
+                }
+                
+                vipButton.onclick = async (e) => {
+                    e.preventDefault();
+                    if (window.playerBalance < 5000000) {
+                        const newBalance = window.playerBalance + 10000000;
+                        await setDoc(doc(db, "users", username), { 
+                            balance: newBalance 
+                        }, { merge: true });
+                    }
+                };
+            } else {
+                freeButton.style.display = 'flex';
+                vipButton.style.display = 'none';
+                
+                const updateCountdown = () => {
+                    const now = Date.now();
+                    const cooldownTime = 3600000; // 1 hour
+                    if (now - window.lastFreeReward < cooldownTime) {
+                        freeButton.disabled = true;
+                        freeButton.style.opacity = '0.5';
+                        freeButton.style.cursor = 'not-allowed';
+                        const timeLeft = Math.ceil((cooldownTime - (now - window.lastFreeReward)) / 1000);
+                        freeButton.textContent = `Wait ${timeLeft} sec`;
+                    } else {
+                        freeButton.disabled = false;
+                        freeButton.style.opacity = '1';
+                        freeButton.style.cursor = 'pointer';
+                        freeButton.innerHTML = '<span class="material-icons">add_circle</span>Get $1,000';
+                    }
+                };
+                
+                updateCountdown();
+                const countdownInterval = setInterval(updateCountdown, 1000);
+                
+                freeButton.onclick = async (e) => {
+                    e.preventDefault();
+                    const now = Date.now();
+                    if (now - window.lastFreeReward >= 3600000) {
+                        const newBalance = window.playerBalance + 1000;
+                        await setDoc(doc(db, "users", username), {
+                            balance: newBalance,
+                            lastFreeReward: now
+                        }, { merge: true });
+                    }
+                };
+            }
+        }
+
+        window.initializePlayer = initializePlayer;
+        initializePlayer();
+
+        // Online presence tracking
+        const username = localStorage.getItem('username');
+        if (username) {
+            const playerRef = ref(database, `online/${username}`);
+            const onlineRef = ref(database, 'online');
+
+            onValue(onlineRef, (snapshot) => {
+                const onlinePlayers = snapshot.val() || {};
+                const uniqueDevices = new Set();
+                Object.entries(onlinePlayers).forEach(([id, status]) => {
+                    if (status.online) {
+                        uniqueDevices.add(id);
+                    }
+                });
+                document.getElementById('onlinePlayers').textContent = uniqueDevices.size;
+            });
+
+            onValue(ref(database, '.info/connected'), (snapshot) => {
+                if (snapshot.val() === true && username) {
+                    onDisconnect(playerRef).remove();
+                    set(playerRef, {
+                        online: true,
+                        lastSeen: serverTimestamp()
+                    });
+                }
+            });
+        }
+    </script>
+    <script src="../home-script.js"></script>
+    <script src="leaderboard.js"></script>
+</body>
+</html> 

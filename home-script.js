@@ -133,12 +133,18 @@ class GameHub {
                 const now = Date.now();
                 const playerRef = doc(db, "users", username);
                 await setDoc(playerRef, {
-                    balance: window.playerBalance + amount,
+                    balance: (window.playerBalance || 0) + amount,
                     lastFreeReward: now
                 }, { merge: true });
                 
                 window.lastFreeReward = now;
                 this.showNotification(`Successfully added $${amount.toFixed(2)}!`, 'success');
+                
+                if (!window.isVIP) {
+                    setTimeout(() => {
+                        this.showNotification('Want more money? Buy VIP ($5) 👑', 'info', 8000);
+                    }, 1500);
+                }
             } catch (error) {
                 console.error("Error adding money:", error);
                 this.showNotification("Failed to add money. Please try again.", 'error');
@@ -146,18 +152,52 @@ class GameHub {
         });
     }
 
-    showNotification(message, type = 'info') {
+    showNotification(message, type = 'info', duration = 5000) {
+        const container = document.querySelector('.notification-container');
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
-        notification.textContent = message;
-        document.body.appendChild(notification);
-
-        setTimeout(() => notification.classList.add('show'), 100);
-
-        setTimeout(() => {
-            notification.classList.remove('show');
+        
+        let icon;
+        switch(type) {
+            case 'success':
+                icon = 'check_circle';
+                break;
+            case 'warning':
+                icon = 'warning';
+                break;
+            case 'error':
+                icon = 'error';
+                break;
+            default:
+                icon = 'info';
+        }
+        
+        notification.innerHTML = `
+            <span class="material-icons icon">${icon}</span>
+            <div class="content">
+                <div class="message">${message}</div>
+            </div>
+            <button class="close-btn">
+                <span class="material-icons">close</span>
+            </button>
+        `;
+        
+        container.appendChild(notification);
+        
+        // Handle close button
+        const closeBtn = notification.querySelector('.close-btn');
+        closeBtn.addEventListener('click', () => {
+            notification.style.animation = 'slideOut 0.3s ease forwards';
             setTimeout(() => notification.remove(), 300);
-        }, 3000);
+        });
+        
+        // Auto remove after duration
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.style.animation = 'slideOut 0.3s ease forwards';
+                setTimeout(() => notification.remove(), 300);
+            }
+        }, duration);
     }
 
     initializeSettings() {

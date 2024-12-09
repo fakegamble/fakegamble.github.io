@@ -146,22 +146,12 @@ class CrashGame {
 
     generateCrashPoint() {
         const r = Math.random();
-        const e = 0.035; // Base house edge (3.5%)
+        const baseHouseEdge = 0.035; // Base house edge (3.5%)
         
-        // Calculate additional edge based on bet amount
-        // Higher bets increase the chance of early crashes
-        const maxSafebet = 100; // Consider bets above 100 as "high"
-        const betMultiplier = Math.min(this.betAmount / maxSafebet, 1); // 0 to 1 based on bet size
-        const additionalEdge = betMultiplier * 0.15; // Up to 15% additional edge for max bets
-        
-        const totalEdge = e + additionalEdge;
-        
-        // Using exponential distribution for more extreme values
-        const lambda = 0.2 * (1 + betMultiplier); // Lambda increases with bet size
-        
-        // Generate crash point with exponential distribution
+        // Normal crash point calculation with slightly higher lambda for more frequent crashes
+        const lambda = 0.25; // Increased from 0.2 to create more frequent crashes
         const crashPoint = Math.max(1.00, 
-            (1 / lambda) * Math.log(1 / (1 - r)) * (1 - totalEdge)
+            (1 / lambda) * Math.log(1 / (1 - r)) * (1 - baseHouseEdge)
         );
         
         return Math.min(10000, crashPoint);

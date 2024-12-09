@@ -328,8 +328,22 @@
         </div>
     </div>
     <script src="home-script.js"></script>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    <script>
+        // Handle 404 redirects for GitHub Pages
+        (function() {
+            var redirect = sessionStorage.redirect;
+            delete sessionStorage.redirect;
+            if (redirect && redirect != location.href) {
+                history.replaceState(null, null, redirect);
+                // Handle the case where the 404.html page is loaded directly
+                if (location.pathname !== '/' && !location.pathname.match(/\.(html|css|js|png|jpg|gif)$/)) {
+                    window.location.href = '/404.html';
+                }
+            }
+        })();
+    </script>
+    </body>
+    </html>
         import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getDatabase, ref, onValue, onDisconnect, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
@@ -441,10 +455,22 @@
             
             if (window.isVIP) {
                 welcomeHeading.innerHTML = `Welcome back, <span id="welcomeUsername">${username}</span>! 👑`;
-                welcomeSubtext.textContent = 'VIP Member - Enjoy exclusive benefits!';
+                welcomeSubtext.innerHTML = `
+                    <span class="benefit-text">Enjoy unlimited rewards and exclusive benefits!</span>
+                    <span class="vip-badge">VIP MEMBER</span>
+                    <div class="vip-perks">
+                    </div>`;
             } else {
-                welcomeHeading.innerHTML = `Welcome back, <span id="welcomeUsername">${username}</span>!🎮`;
-                welcomeSubtext.textContent = 'Ready to play? Choose your game below!';
+                welcomeHeading.innerHTML = `Welcome back, <span id="welcomeUsername">${username}</span>! 🎮`;
+                welcomeSubtext.innerHTML = `
+                    <div class="welcome-content">
+                        <span class="primary-text">Ready to play? Choose your game below!</span>
+                        <div class="upgrade-prompt">
+                            <span class="upgrade-text">Need more money?</span>
+                            <span class="vip-highlight">Upgrade to VIP ($5)</span>
+                            <span class="vip-benefit">Get $10M whenever your balance is low!</span>
+                        </div>
+                    </div>`;
             }
         }
 
